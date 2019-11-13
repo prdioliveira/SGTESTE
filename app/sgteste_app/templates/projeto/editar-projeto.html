@@ -1,0 +1,71 @@
+{% extends 'base/base.html' %}
+{% load app_extras %}
+
+{% block title %}
+    Editar | Projeto
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="panel">
+            <div class="panel-heading">
+                <h2>Editar - Projeto: {{ projeto.nome_projeto }}</h2>
+            </div>
+            <div class="panel-body">
+                <form method="post" id="projetoForm" role="form">{% csrf_token %}
+
+                    <div class="form-group row">
+                        <div class="col-md-12" disabled="true">
+                            <label>Nome do Projeto</label>
+                            {{ form.nome_projeto|addcss:"form-control" }}
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-4">
+                            <label>Data Inicial</label>
+                            <div class="input-group date" data-provide="datepicker">
+                                {{ form.data_inicial|addcss:"form-control datepicker" }}
+                                <div class="input-group-addon">
+                                    <span class="glyphicon glyphicon-th"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Qtd. dias de execução</label>
+                                {{ form.dias_execucao|addcss:"form-control" }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label>Quantidade CT</label>
+                            {{ form.quantidade_ct|addcss:"form-control" }}
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-12">
+                            <label>Responsável</label>
+                            {{ form.responsavel|addcss:"form-control" }}
+                        </div>
+                    </div>
+
+
+
+                    <nav class="nav-fill">
+                        <div class="form-group">
+                            <button id="btn-save" class="btn btn-success" type="submit">
+                                <span class="glyphicon glyphicon-floppy-disk"></span>
+                                Gravar
+                            </button>
+                            <a class="btn btn-primary" href="{% url 'sgteste_app:pesquisar_projeto' %}">
+                                <span class="glyphicon glyphicon-arrow-left"></span>
+                                Voltar
+                            </a>
+                        </div>
+                    </nav>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

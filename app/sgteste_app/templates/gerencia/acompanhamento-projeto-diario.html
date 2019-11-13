@@ -1,0 +1,91 @@
+{% extends 'base/base.html' %}
+{% load app_extras %}
+
+{% block title %}
+    Acompanhar | Projeto
+{% endblock %}
+{% block resp %}Responsável: {{ projeto.responsavel }} {% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="panel">
+            <div class="panel-heading">
+                <h2>Projeto: {{ projeto.nome_projeto }}</h2>
+                {% if projeto.data_conclusao != None %}
+                <h4>Status: {{ projeto.status_projeto.status }} em {{ projeto.data_conclusao }}</h4>
+                {% else %}
+                    <h4>Status: {{ projeto.status_projeto.status }}</h4>
+                {% endif %}
+            </div>
+            <div class="panel-body">
+                <table class="table table-responsive-lg table-striped">
+                    <thead>
+                    <tr>
+                        <th class="text-center position-fixed">Data de Execução</th>
+                        <th class="text-center">CT's Previstos</th>
+                        <th class="text-center">Executados</th>
+                        <th class="text-center">Bugs</th>
+                        <th class="text-center">Cancelados</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for d in diario %}
+                        <tr>
+                            <td><a href="{% url 'sgteste_app:visualizar_acompanhamento_diario' projeto_id=projeto.id pk=d.pk %}">{{ d.data_execucao|escape }}</a></td>
+                            <td class="align-middle text-center">{{ d.cts_previstos }}</td>
+                            {% if d.cts_executados >= d.cts_previstos %}
+                                <td class="text-primary text-center"><strong>{{ d.cts_executados }}</strong></td>
+                            {% else %}
+                                <td class="text-danger text-center"><strong>{{ d.cts_executados }}</strong></td>
+                            {% endif %}
+                            <td class="text-center">{{ d.bugs_encontrados }}</td>
+                            <td class="text-center">{{ d.cts_cancelados }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <label>Casos de Teste previstos:</label>
+                    {{ projeto.quantidade_ct }}
+                </div>
+
+                <div class="col-md-3">
+                    <label>Casos de Teste adicionais:</label>
+                    {{ cts_adicionais }}
+                </div>
+
+                <div class="col-md-3">
+                    <label>Casos de Teste executados:</label>
+                    {{ diario_qtd_cts.cts_executados }}
+                </div>
+
+                <div class="col-md-3">
+                    <label>Casos de Teste pendentes:</label>
+                    {{ cts_restantes }}
+                </div>
+
+            </div>
+
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <label>Dias Planejados:</label>
+                    {{ projeto.dias_execucao }}
+                </div>
+
+                <div class="col-md-3">
+                    <label>Dias adicionais:</label>
+                    {{ dias_adicionais }}
+                </div>
+
+                <div class="col-md-3">
+                    <label>Dias executados:</label>
+                    {{ dias_executados }}
+                </div>
+            </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

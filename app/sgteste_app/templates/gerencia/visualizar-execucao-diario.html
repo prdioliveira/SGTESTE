@@ -1,0 +1,77 @@
+{% extends 'base/base.html' %}
+{% load app_extras %}
+
+{% block title %}
+    Visualizar | Acompanhamento Diario
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="panel">
+            <div class="panel-heading">
+                <h2>{{ projeto.nome_projeto }}</h2>
+            </div>
+            <div class="panel-body">
+
+
+                <div class="form-group row">
+                    <div class="col-md-12">
+                        <label>Data de Execução</label>
+                        {{ diario.data_execucao }}
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <label>Previstos:</label>
+                        {{ diario.cts_previstos }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Executados:</label>
+                        {{ diario.cts_executados }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Bugs Blocantes:</label>
+                        {{ diario.bugs_encontrados }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>CTs Cancelados:</label>
+                        {{ diario.cts_cancelados }}
+                    </div>
+                </div>
+                {% if projeto.data_conclusao != None %}
+                    <div class="form-group row">
+                        <div class="col-md-12">
+                            <label>Data de Conclusão:</label>
+                            {{ projeto.data_conclusao|escape }}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="form-group row">
+                    <div class="col-md-12">
+                        <label>Observação:</label>
+                        {% if diario.cts_executados > 0 %}
+                            <p>{{ diario.observacao|linebreaksbr }}</p>
+                        {% else %}
+                            <p>Não Executado</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <nav class="nav-fill">
+                    <div class="form-group">
+                        <a class="btn btn-primary" href="{% url 'sgteste_app:acompanhamento_diario' projeto_id=projeto.pk %}">
+                            <span class="glyphicon glyphicon-arrow-left"></span>
+                            Voltar
+                        </a>
+                    </div>
+                </nav>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

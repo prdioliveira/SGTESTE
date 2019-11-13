@@ -1,0 +1,147 @@
+{% extends 'base/base.html' %}
+{% load app_extras %}
+{% block title %}
+    Pesquisa | Projeto
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="panel">
+            <div class="panel-heading">
+                <h2>Pesquisar - Projetos</h2>
+            </div>
+            <div class="panel-body">
+                <form method="get" id="pesquisaForm">
+
+                    <div class="form-group row">
+                        <div class="col-md-12">
+                            <label>Nome do Projeto</label>
+                            <input type="text" class="form-control" name="nome_projeto" id="id_nome_projeto" placeholder="Projeto"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-12">
+                            <label>Responsável</label>
+                            <input type="text" class="form-control" name="responsavel" id="id_responsavel" placeholder="Responsável"/>
+                        </div>
+                    </div>
+
+                    <nav class="nav-fill">
+                        <div class="form-group">
+                            <button id="btn-pesquisar" class="btn btn-primary" type="submit">
+                                <span class="glyphicon glyphicon-search"></span>
+                                Pesquisar
+                            </button>
+                            <a id="btn-limpar" class="btn btn-danger" href="{% url 'sgteste_app:pesquisar_projeto' %}">
+                                <span class="glyphicon glyphicon-refresh"></span>
+                                Limpar Pesquisa
+                            </a>
+                            <a href="{% url 'sgteste_app:cadastrar_projeto' %}" class="btn btn-info" id="btn-cadastrar">
+                                <span class="glyphicon glyphicon-plus"></span>
+                                Cadastrar Projeto
+                            </a>
+                        </div>
+                    </nav>
+
+                </form>
+                <hr>
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th class="text-center">Projeto</th>
+                        <th class="text-center">Data Inicial</th>
+                        <th class="text-center">Responsavel</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Ação</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for projeto in projetos %}
+                        <tr>
+                            <td class="text-center">{{ projeto.id }}</td>
+                            <td>{{ projeto.nome_projeto }}</td>
+                            <td>{{ projeto.data_inicial }}</td>
+                            <td>{{ projeto.responsavel }}</td>
+                            <td class="text-center">{{ projeto.status_projeto }}</td>
+                            <td class="text-center">
+                                {% if projeto.status_projeto_id != 1 %}
+                                    <a class="btn btn-sm btn-success disabled" id="edit_project" data-toggle="tooltip" data-placement="top" title="Editar projeto" href="{% url 'sgteste_app:editar_projeto' pk=projeto.pk %}">
+                                        <span class="glyphicon glyphicon-pencil text-center"></span>
+                                    </a>
+                                {% else %}
+                                    <a class="btn btn-sm btn-success" id="edit_project" data-toggle="tooltip" data-placement="top" title="Editar projeto" href="{% url 'sgteste_app:editar_projeto' pk=projeto.pk %}">
+                                        <span class="glyphicon glyphicon-pencil text-center"></span>
+                                    </a>
+                                {% endif %}
+                                {% if projeto.status_projeto_id != 1 %}
+                                    <a class="btn btn-sm btn-danger disabled" id="exclude_project" data-toggle="tooltip" data-placement="top" title="Exlcuir projeto" href="#">
+                                        <span class="glyphicon glyphicon-trash text-center"></span>
+                                    </a>
+                                {% else %}
+                                    <a class="btn btn-sm btn-danger" id="exclude_project" data-toggle="tooltip" data-placement="top" title="Exlcuir projeto" href="{% url 'sgteste_app:deletar_projeto' pk=projeto.pk %}">
+                                        <span class="glyphicon glyphicon-trash text-center"></span>
+                                    </a>
+                                {% endif %}
+                                {% if projeto.status_projeto_id == 3 %}
+                                    <a class="btn btn-sm btn-info disabled" id="execute_test" data-toggle="tooltip" data-placement="top" title="Executar teste" href="{% url 'sgteste_app:lista_execucao' projeto_id=projeto.pk %}">
+                                        <span class="glyphicon glyphicon-folder-open text-center"></span>
+                                    </a>
+                                {% else %}
+                                    <a class="btn btn-sm btn-info" id="execute_test" data-toggle="tooltip" data-placement="top" title="Executar teste" href="{% url 'sgteste_app:lista_execucao' projeto_id=projeto.pk %}">
+                                        <span class="glyphicon glyphicon-folder-open text-center"></span>
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <!-- Paginação -->
+                {% if projetos.has_other_pages %}
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination">
+                            {% if projetos.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" aria-label="Previous" href="?page={{ projetos.previous_page_number }}&nome_projeto={{ query_projeto }}&responsavel={{ query_responsavel }}">
+                                        <span aria-hidden="true">&laquo;</span>
+                                        <span class="sr-only">Previous</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span aria-hidden="true">&laquo;</span></li>
+                            {% endif %}
+                            {% for i in projetos.paginator.page_range %}
+                                {% if projetos.number == i %}
+                                    <li class="page-item active">
+                                        <a class="page-link" href="#">{{ i }}
+                                            <span class="sr-only">(current)</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ i }}&nome_projeto={{ query_projeto }}&responsavel={{ query_responsavel }}">{{ i }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if projetos.has_next %}
+                                <li class="page-item"><a class="page-link" href="?page={{ projetos.next_page_number }}&nome_projeto={{ query_projeto }}&responsavel={{ query_responsavel }}">&raquo;</a></li>
+                            {% else %}
+                                <li class="page-item disabled"><span>&raquo;</span></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            <div class="form-group">
+                {% for i in projetos.paginator.page_range %}
+                    {% if projetos.number == i %}
+                        <p>Página: {{ i }} de {{ projetos.paginator.num_pages }}</p>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <!-- Fim Paginação -->
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

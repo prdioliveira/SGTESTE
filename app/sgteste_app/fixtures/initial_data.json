@@ -1,0 +1,23 @@
+[
+   {
+    "model": "sgteste_app.StatusProjeto",
+    "pk": 1,
+    "fields": {
+      "status": "Planejado"
+    }
+  },
+   {
+    "model": "sgteste_app.StatusProjeto",
+    "pk": 2,
+    "fields": {
+      "status": "Em execução"
+    }
+  },
+   {
+    "model": "sgteste_app.StatusProjeto",
+    "pk": 3,
+    "fields": {
+      "status": "Concluído"
+    }
+  }
+]

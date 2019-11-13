@@ -1,0 +1,80 @@
+{% extends 'base/base.html' %}
+{% load app_extras %}
+
+{% block title %}
+    Execução diário | Projeto
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="panel">
+            <div class="panel-heading">
+                <h2>{{ projeto }}</h2>
+            </div>
+            <div class="panel-body">
+                <form method="post" id="projetoForm" role="form">{% csrf_token %}
+                <table class="table table-light text-center">
+
+                    {% for d in diario %}
+                        {% cycle '<tr>' '' '' '' %}
+                        {% if d.cts_executados == 0 %}
+                            <td>
+                                {% if prj.status_projeto_id != 3 %}
+                                    <a class="btn btn-info" href="{% url 'sgteste_app:executar_teste' projeto_id=d.projeto_id pk=d.pk %}">{{ d.data_execucao|safe }}</a>
+                                    {{ d.item }}
+                                {% else %}
+                                    <a class="btn btn-info disabled" href="{% url 'sgteste_app:executar_teste' projeto_id=d.projeto_id pk=d.pk %}">{{ d.data_execucao|safe }}</a>
+                                    {{ d.item }}
+                                {% endif %}
+                            </td>
+                        {% else %}
+                            <td>
+                                {% if prj.status_projeto_id != 3 %}
+                                    <a class="btn btn-success" href="{% url 'sgteste_app:executar_teste' projeto_id=d.projeto_id pk=d.pk %}">{{ d.data_execucao|safe }}</a>
+                                        {{ d.item }}
+                                {% else %}
+                                    <a class="btn btn-success disabled" href="{% url 'sgteste_app:executar_teste' projeto_id=d.projeto_id pk=d.pk %}">{{ d.data_execucao|safe }}</a>
+                                        {{ d.item }}
+                                {% endif %}
+
+                            </td>
+                        {% endif %}
+                        {% cycle '' '' '' '</tr>' %}
+                    {% endfor %}
+
+                </table>
+                <div class="form-group row text-dark">
+                    <div class="col-md-3">
+                        <label>Casos de Teste pendentes:</label>
+                        <b class="text-danger">{{ cts_pendentes }}</b>
+                    </div>
+                </div>
+
+
+                <nav class="nav-fill">
+                        <div class="form-group">
+                            {% if prj.status_projeto_id != 3 %}
+                                <a class="btn btn-danger active" role="button" aria-pressed="true" href="{% url 'sgteste_app:adicionar_planejamento' projeto_id=projeto_id %}">
+                                    <span class="glyphicon glyphicon-wrench"></span>
+                                    Manutenção
+                                </a>
+                            {% endif %}
+                            {% if cts_pendentes == 0 and prj.status_projeto_id != 3 %}
+                                <button id="btn-save" class="btn btn-success" type="submit">
+                                    <span class="glyphicon glyphicon-ok"></span>
+                                    Concluir Projeto
+                                </button>
+                            {% endif %}
+
+                            <a class="btn btn-primary" href="{% url 'sgteste_app:pesquisar_projeto' %}">
+                                <span class="glyphicon glyphicon-arrow-left"></span>
+                                Voltar
+                            </a>
+                        </div>
+                    </nav>
+
+            </form>
+        </div>
+    </div>
+    </div>
+{% endblock %}

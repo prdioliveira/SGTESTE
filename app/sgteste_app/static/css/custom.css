@@ -1,0 +1,4 @@
+textarea {
+  resize: none; /* user can resize vertically, but width is fixed */
+  rows: 4;
+}
