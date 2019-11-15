@@ -153,6 +153,8 @@ def add_planning(initial_date, final_date, cts, project_id, number_of_days):
     contador = 0
     x = 1
     last_date = ''
+    cts_adicionais = Projeto.objects.get(pk=project_id).cts_adicionais
+    cts_adicionais += int(cts)
     for d in iterdates(initial_date, final_date):
         if d.weekday() not in (5, 6):
             # print(d, d.weekday(), calcula_planejamento(cts, qtd_dias))
@@ -169,6 +171,7 @@ def add_planning(initial_date, final_date, cts, project_id, number_of_days):
             Diario.objects.create(data_execucao=last_date, cts_previstos=calculate_avg(cts, number_of_days), projeto_id=project_id)
             last_date += one_day
         x += 1
+    Projeto.objects.filter(pk=project_id).update(cts_adicionais=cts_adicionais)
 
 
 def update_pos_execute(project_id, diario_id, cts_executados):

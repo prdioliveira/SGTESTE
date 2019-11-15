@@ -14,6 +14,7 @@ class Projeto(models.Model):
     quantidade_ct = models.IntegerField()
     status_projeto = models.ForeignKey(StatusProjeto, on_delete=models.PROTECT)
     data_conclusao = models.DateField(null=True, blank=True)
+    cts_adicionais = models.IntegerField(null=True, blank=True, default=0)
 
     def __str__(self):
         return self.nome_projeto
