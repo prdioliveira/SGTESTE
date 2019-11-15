@@ -1,21 +1,34 @@
 from app.sgteste_app.models.diario_models import Diario
 from django.db.models import Sum, Count
 
+from app.sgteste_app.models.projeto_models import Projeto
+
 
 def get_ct_restante(projeto_id):
-    diario_qtd_cts = Diario.objects.filter(
-        projeto_id=projeto_id).aggregate(cts_previstos=Sum('cts_previstos'),
-                                         cts_executados=Sum('cts_executados'),
-                                         cts_cancelados=Sum('cts_cancelados'))
+    """
 
-    cts_restantes = diario_qtd_cts['cts_previstos'] - \
-                    diario_qtd_cts['cts_executados'] - \
+    :param projeto_id: id do projeto
+    :return: quantidade de cts que ainda restam executar
+    """
+    projeto = Projeto.objects.get(pk=projeto_id)
+    qtd_cts_previstos = projeto.quantidade_ct
+    diario_qtd_cts = Diario.objects.filter(projeto_id=projeto_id).aggregate(
+        cts_executados=Sum('cts_executados'),
+        cts_cancelados=Sum('cts_cancelados')
+    )
+
+    cts_restantes = qtd_cts_previstos + get_cts_adicionais(projeto) - diario_qtd_cts['cts_executados'] - \
                     diario_qtd_cts['cts_cancelados']
 
     return cts_restantes
 
 
 def get_dias_executados(projeto_id):
+    """
+
+    :param projeto_id: id do projeto
+    :return: quantidade de dias em que houve execução
+    """
     executados = Diario.objects.filter(
         projeto_id=projeto_id, cts_executados__gt=0).aggregate(
         dias_exec=Count('cts_executados'))
@@ -26,12 +39,7 @@ def get_dias_executados(projeto_id):
 
 
 def get_cts_adicionais(object):
-    diario_qtd_cts = Diario.objects.filter(
-        projeto_id=object.id).aggregate(cts_previstos=Sum('cts_previstos'),
-                                        cts_executados=Sum('cts_executados'))
-
-    cts_adicionais = diario_qtd_cts['cts_previstos'] - object.quantidade_ct
-
+    cts_adicionais = object.cts_adicionais
     return cts_adicionais
 
 
