@@ -1,3 +1,5 @@
+from psycopg2._psycopg import DatabaseError
+
 from app.sgteste_app.models.diario_models import Diario
 import datetime
 from math import ceil
@@ -35,7 +37,10 @@ def create_planning(initial_date, final_date, cts, project_id, number_of_days):
     for d in iterdates(initial_date, final_date):
         if d.weekday() not in (5, 6):
             # print(d, d.weekday(), calcula_planejamento(cts, qtd_dias))
-            Diario.objects.create(data_execucao=d, cts_previstos=calculate_avg(cts, number_of_days), projeto_id=project_id)
+            try:
+                Diario.objects.create(data_execucao=d, cts_previstos=calculate_avg(cts, number_of_days), projeto_id=project_id)
+            except DatabaseError as error:
+                print(error)
         else:
             contador += 1
         last_date = d + one_day
@@ -45,7 +50,10 @@ def create_planning(initial_date, final_date, cts, project_id, number_of_days):
             last_date += one_day
             contador += 1
         else:
-            Diario.objects.create(data_execucao=last_date, cts_previstos=calculate_avg(cts, number_of_days), projeto_id=project_id)
+            try:
+                Diario.objects.create(data_execucao=last_date, cts_previstos=calculate_avg(cts, number_of_days), projeto_id=project_id)
+            except DatabaseError as error:
+                print(error)
             last_date += one_day
         x += 1
     diff = diff_test_case_previstos(project_id)
@@ -85,8 +93,12 @@ def sum_test_case(project_id):
     :param project_id: id do projeto
     :return: quantidade de casos de teste do projeto conforme id
     """
-    test_case = Diario.objects.filter(projeto_id=project_id).aggregate(cts_previstos=Sum('cts_previstos'))
-    quantidade_cts = test_case['cts_previstos']
+    quantidade_cts = 0
+    try:
+        test_case = Diario.objects.filter(projeto_id=project_id).aggregate(cts_previstos=Sum('cts_previstos'))
+        quantidade_cts = test_case['cts_previstos']
+    except DatabaseError as error:
+        print(error)
 
     return quantidade_cts
 
@@ -132,9 +144,12 @@ def fit_planning(project_id, cts, number_of_days):
     diff = diff_test_case_previstos(project_id)
     cont = 0
     while cont < diff:
-        id_diario = Diario.objects.filter(projeto_id=project_id).order_by('-data_execucao')[cont].id
-        upd_new = calculate_avg(cts, number_of_days) - 1
-        Diario.objects.filter(pk=id_diario).update(cts_previstos=upd_new)
+        try:
+            id_diario = Diario.objects.filter(projeto_id=project_id).order_by('-data_execucao')[cont].id
+            upd_new = calculate_avg(cts, number_of_days) - 1
+            Diario.objects.filter(pk=id_diario).update(cts_previstos=upd_new)
+        except DatabaseError as error:
+            print(error)
         cont += 1
 
 
@@ -153,12 +168,19 @@ def add_planning(initial_date, final_date, cts, project_id, number_of_days):
     contador = 0
     x = 1
     last_date = ''
-    cts_adicionais = Projeto.objects.get(pk=project_id).cts_adicionais
-    cts_adicionais += int(cts)
+    try:
+        cts_adicionais = Projeto.objects.get(pk=project_id).cts_adicionais
+        cts_adicionais += int(cts)
+        Projeto.objects.filter(pk=project_id).update(cts_adicionais=cts_adicionais)
+    except DatabaseError as error:
+        print(error)
     for d in iterdates(initial_date, final_date):
         if d.weekday() not in (5, 6):
             # print(d, d.weekday(), calcula_planejamento(cts, qtd_dias))
-            Diario.objects.create(data_execucao=d, cts_previstos=calculate_avg(cts, number_of_days), projeto_id=project_id)
+            try:
+                Diario.objects.create(data_execucao=d, cts_previstos=calculate_avg(cts, number_of_days), projeto_id=project_id)
+            except DatabaseError as error:
+                print(error)
         else:
             contador += 1
         last_date = d + one_day
@@ -168,10 +190,12 @@ def add_planning(initial_date, final_date, cts, project_id, number_of_days):
             last_date += one_day
             contador += 1
         else:
-            Diario.objects.create(data_execucao=last_date, cts_previstos=calculate_avg(cts, number_of_days), projeto_id=project_id)
-            last_date += one_day
+            try:
+                Diario.objects.create(data_execucao=last_date, cts_previstos=calculate_avg(cts, number_of_days), projeto_id=project_id)
+                last_date += one_day
+            except DatabaseError as error:
+                print(error)
         x += 1
-    Projeto.objects.filter(pk=project_id).update(cts_adicionais=cts_adicionais)
 
 
 def update_pos_execute(project_id, diario_id, cts_executados):
@@ -189,17 +213,14 @@ def update_pos_execute(project_id, diario_id, cts_executados):
     diff_exec_to_previsto = cts_executados_diario - cts_previstos_diario
     dias = len(diario)
     total_for_recalculate = 0
-    if diff_exec_to_previsto > 0:
-        total_for_recalculate = sum_test_case_previstos_for_update(project_id) - diff_exec_to_previsto
+    if dias > 0 and dias is not None:
+        pass
     else:
-        total_for_recalculate = sum_test_case_previstos_for_update(project_id) + diff_exec_to_previsto
-
-    media = calculate_avg(total_for_recalculate, dias)
-
-    for d in diario:
-        Diario.objects.filter(pk=d.id).update(cts_previstos=media)
-
-    fit_planning_for_update(project_id, total_for_recalculate, len(diario))
+        diff_exec_to_previsto = diff_exec_to_previsto * -1
+        data = Diario.objects.filter(projeto_id=project_id).order_by('-data_execucao')[0].data_execucao
+        initial_date = data + datetime.timedelta(days=1)
+        final_date = data + datetime.timedelta(days=2)
+        add_planning(initial_date, final_date, 0, project_id, 1)
 
 
 def sum_test_case_previstos_for_update(project_id):
@@ -208,22 +229,26 @@ def sum_test_case_previstos_for_update(project_id):
     :param project_id: id projeto
     :return: soma dos casos de teste ainda não executados
     """
-    cts_previstos = Diario.objects.filter(projeto_id=project_id,
-                                          cts_executados=0).aggregate(
-        cts_previstos=Sum('cts_previstos')
-    )
+    total_cts = 0
+    try:
+        cts_previstos = Diario.objects.filter(projeto_id=project_id,
+                                              cts_executados=0).aggregate(
+            cts_previstos=Sum('cts_previstos')
+        )
 
-    cts_executados = Diario.objects.filter(projeto_id=project_id,
-                                           cts_executados=0).aggregate(
-        cts_executados=Sum('cts_executados')
-    )
+        cts_executados = Diario.objects.filter(projeto_id=project_id,
+                                               cts_executados=0).aggregate(
+            cts_executados=Sum('cts_executados')
+        )
 
-    bugs_encontrados = Diario.objects.filter(projeto_id=project_id,
-                                             cts_executados=0).aggregate(
-        bugs_encontrados=Sum('bugs_encontrados')
-    )
+        bugs_encontrados = Diario.objects.filter(projeto_id=project_id,
+                                                 cts_executados=0).aggregate(
+            bugs_encontrados=Sum('bugs_encontrados')
+        )
 
-    total_cts = cts_previstos['cts_previstos'] - cts_executados['cts_executados'] - bugs_encontrados['bugs_encontrados']
+        total_cts = cts_previstos['cts_previstos'] - cts_executados['cts_executados'] - bugs_encontrados['bugs_encontrados']
+    except DatabaseError as error:
+        print(error)
 
     return total_cts
 
@@ -244,9 +269,12 @@ def get_cts_previstos_in_diario(diario_id):
     :param diario_id: id do diario
     :return: quantidade de cts previstos para a execução no dia
     """
-    diario = Diario.objects.get(pk=diario_id)
-    cts_previstos = diario.cts_previstos
-
+    cts_previstos = 0
+    try:
+        diario = Diario.objects.get(pk=diario_id)
+        cts_previstos = diario.cts_previstos
+    except DatabaseError as error:
+        print(error)
     return cts_previstos
 
 
@@ -264,18 +292,34 @@ def fit_planning_for_update(project_id, cts, number_of_days):
     """
     diff = diff_planejado_2_diff_sum_diario(project_id)
     cont = 0
-    while cont < diff:
-        id_diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0).order_by('-data_execucao')[cont].id
-        upd_new = calculate_avg(cts, number_of_days) - 1
-        Diario.objects.filter(pk=id_diario).update(cts_previstos=upd_new)
-        cont += 1
     alt = 0
-    while cont > diff:
-        id_diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0).order_by('data_execucao')[alt].id
-        upd_new = calculate_avg(cts, number_of_days) + 1
-        Diario.objects.filter(pk=id_diario).update(cts_previstos=upd_new)
-        cont -= 1
-        alt += 1
+    count_id = 0
+    if cont < diff:
+        while cont < diff:
+            try:
+                id_diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0).order_by('-data_execucao')[cont].id
+                upd_new = calculate_avg(cts, number_of_days) - 1
+                Diario.objects.filter(pk=id_diario).update(cts_previstos=upd_new)
+            except DatabaseError as error:
+                print(error)
+            cont += 1
+    else:
+        cts_previstos = sum_test_case_previstos_for_update(project_id)
+        diff_in_diff = diff + cts_previstos
+        cont = 0
+        alt = 0
+        while cont > diff:
+            id_diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0).order_by('-data_execucao')[alt].id
+            media = calculate_avg(cts_previstos + diff_in_diff, number_of_days) + 1
+            # if media % 2 == 0:
+            #     media = calculate_avg(cts_previstos, number_of_days) + 2
+            Diario.objects.filter(pk=id_diario).update(cts_previstos=media)
+            if alt == number_of_days - 1:
+                alt = 0
+            cont -= 1
+            alt += 1
+
+
 
 
 def get_total_cts_executados(project_id):
@@ -284,11 +328,15 @@ def get_total_cts_executados(project_id):
     :param project_id: id do projeto
     :return: quantidade de cts executados
     """
-    cts_executados = Diario.objects.filter(projeto_id=project_id,
-                                           cts_executados__gt=0).aggregate(
-        cts_executados=Sum('cts_executados')
-    )
-    executados = cts_executados['cts_executados']
+    executados = 0
+    try:
+        cts_executados = Diario.objects.filter(projeto_id=project_id,
+                                               cts_executados__gt=0).aggregate(
+            cts_executados=Sum('cts_executados')
+        )
+        executados = cts_executados['cts_executados']
+    except DatabaseError as error:
+        print(error)
 
     return executados
 
@@ -301,7 +349,7 @@ def diff_planejado_2_diff_sum_diario(project_id):
     devem ser removidos ou inseridos, para utilização em fit_planning_for_update
     """
     sum_ct_restante = sum_test_case_previstos_for_update(project_id)
-    total_ct_prj = Projeto.objects.get(pk=project_id).quantidade_ct
+    total_ct_prj = Projeto.objects.get(pk=project_id).quantidade_ct + Projeto.objects.get(pk=project_id).cts_adicionais
     total_cts_executados = get_total_cts_executados(project_id)
     cts = total_ct_prj - total_cts_executados
 

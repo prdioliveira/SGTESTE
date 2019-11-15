@@ -10,13 +10,14 @@ def get_ct_restante(projeto_id):
     :param projeto_id: id do projeto
     :return: quantidade de cts que ainda restam executar
     """
-    qtd_cts_previstos = Projeto.objects.get(pk=projeto_id).quantidade_ct
+    projeto = Projeto.objects.get(pk=projeto_id)
+    qtd_cts_previstos = projeto.quantidade_ct
     diario_qtd_cts = Diario.objects.filter(projeto_id=projeto_id).aggregate(
         cts_executados=Sum('cts_executados'),
         cts_cancelados=Sum('cts_cancelados')
     )
 
-    cts_restantes = qtd_cts_previstos - diario_qtd_cts['cts_executados'] - \
+    cts_restantes = qtd_cts_previstos + get_cts_adicionais(projeto) - diario_qtd_cts['cts_executados'] - \
                     diario_qtd_cts['cts_cancelados']
 
     return cts_restantes
