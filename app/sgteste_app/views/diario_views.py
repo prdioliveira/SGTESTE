@@ -7,7 +7,8 @@ from app.sgteste_app.functions.gerencia_functions import get_cts_adicionais, \
     get_dias_adicionais, get_ct_restante
 from app.sgteste_app.models.diario_models import Diario
 from app.sgteste_app.models.projeto_models import Projeto
-from app.sgteste_app.functions.planejamento_diario_utils import add_planning
+from app.sgteste_app.functions.planejamento_diario_utils import add_planning, \
+    update_pos_execute
 
 
 def lista_execucao(request, projeto_id):
@@ -44,10 +45,13 @@ def executar_teste(request, pk, projeto_id):
                 if status_prj != 2:
                     Projeto.objects.filter(pk=projeto_id).update(status_projeto_id=2)
                     fdiario.save()
+                    update_pos_execute(project_id=projeto_id, diario_id=pk, cts_executados=executados)
                 else:
                     fdiario.save()
+                    update_pos_execute(project_id=projeto_id, diario_id=pk, cts_executados=executados)
             else:
                 fdiario.save()
+                update_pos_execute(project_id=projeto_id, diario_id=pk, cts_executados=executados)
             return redirect('sgteste_app:lista_execucao', projeto_id)
     else:
         form = DiarioForm(instance=diario)
