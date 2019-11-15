@@ -1,13 +1,16 @@
-from app.sgteste_app.functions.gerencia_functions import get_ct_restante
 from app.sgteste_app.models.diario_models import Diario
 import datetime
 from math import ceil
 from django.db.models import Sum
-
 from app.sgteste_app.models.projeto_models import Projeto
 
 
 def iterdates(date1, date2):
+    """
+    :param date1: data inicial
+    :param date2: data final
+    :return: uma lista de data contendo apenas os dias uteis, exeto feriados
+    """
     one_day = datetime.timedelta(days=1)
     current = date1
     while current < date2:
@@ -16,6 +19,15 @@ def iterdates(date1, date2):
 
 
 def create_planning(initial_date, final_date, cts, project_id, number_of_days):
+    """
+
+    :param initial_date: data inicial
+    :param final_date: data final
+    :param cts: quantidade de casos de teste do projeto
+    :param project_id: id do projeto
+    :param number_of_days: quantidade de dias para a execução
+    :return: realiza a atualização no banco inserindo a quantidade de CTS p/dia
+    """
     one_day = datetime.timedelta(days=1)
     contador = 0
     x = 1
@@ -43,11 +55,22 @@ def create_planning(initial_date, final_date, cts, project_id, number_of_days):
 
 # Retorna a quantidade de CTS por dia
 def calculate_avg(cts, qtd_dias):
+    """
+
+    :param cts: quantidade de casos de teste
+    :param qtd_dias: quantidade de dias para execução
+    :return: a media de casos de teste por dia arredondado para cima
+    """
     media = ceil(cts/qtd_dias)
     return media
 
 
 def get_next_id(model_class):
+    """
+
+    :param model_class: Model Class
+    :return: returna o proximo id do model
+    """
     from django.db import connection
     cursor = connection.cursor()
     cursor.execute("select nextval('%s_id_seq')" % model_class._meta.db_table)
@@ -57,6 +80,11 @@ def get_next_id(model_class):
 
 
 def sum_test_case(project_id):
+    """
+
+    :param project_id: id do projeto
+    :return: quantidade de casos de teste do projeto conforme id
+    """
     test_case = Diario.objects.filter(projeto_id=project_id).aggregate(cts_previstos=Sum('cts_previstos'))
     quantidade_cts = test_case['cts_previstos']
 
@@ -64,6 +92,11 @@ def sum_test_case(project_id):
 
 
 def get_test_case_in_prj(project_id):
+    """
+
+    :param project_id: id do projeto
+    :return: quantidade inicial de casos de teste planejados
+    """
     projeto = Projeto.objects.get(pk=project_id)
     quantidade_inicial = projeto.quantidade_ct
 
@@ -71,6 +104,12 @@ def get_test_case_in_prj(project_id):
 
 
 def diff_test_case_previstos(project_id):
+    """
+
+    :param project_id: id do projeto
+    :return: diferença entre o total inserido, conforme media e o total inicial
+    planejado
+    """
     test_case_diario = sum_test_case(project_id)
     test_case_projeto = get_test_case_in_prj(project_id)
 
@@ -80,6 +119,16 @@ def diff_test_case_previstos(project_id):
 
 
 def fit_planning(project_id, cts, number_of_days):
+    """
+
+    :param project_id: id do projeto
+    :param cts: quantidade de casos de teste planejados inicialmente
+    :param number_of_days: quantidade de dias para execução
+    :return: ajusta no db a quantidade de casos de teste. A soma da media dos
+    casos de teste inseridos no diario é maior que o planejado inicialmente.
+    Em ordem decrescente por data, vai reduzindo um CT até atingir o valor
+    planejado inicialmente.
+    """
     diff = diff_test_case_previstos(project_id)
     cont = 0
     while cont < diff:
@@ -90,6 +139,16 @@ def fit_planning(project_id, cts, number_of_days):
 
 
 def add_planning(initial_date, final_date, cts, project_id, number_of_days):
+    """
+
+    :param initial_date: data inicial
+    :param final_date: data final
+    :param cts: quantidade de casos de teste
+    :param project_id: id do projeto
+    :param number_of_days: numero de dias para execução
+    :return: insere no db, na proxima data util a quantidade de CTS planejdos.
+    Insere casos de teste adicionais, ou seja, mais um dia para a execução.
+    """
     one_day = datetime.timedelta(days=1)
     contador = 0
     x = 1
@@ -113,11 +172,17 @@ def add_planning(initial_date, final_date, cts, project_id, number_of_days):
 
 
 def update_pos_execute(project_id, diario_id, cts_executados):
+    """
+
+    :param project_id: id do projeto
+    :param diario_id: id do diario da execução
+    :param cts_executados: quantidade de cts executados (retornado da tela no
+    momento da inserção)
+    :return: Ajusta a media dos casos de teste após a execução do teste.
+    """
     diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0)
     cts_previstos_diario = get_cts_previstos_in_diario(diario_id)
-    print('cts_previstos_diario', cts_previstos_diario)
     cts_executados_diario = get_ct_exec_in_diario(int(cts_executados))
-    print('cts_executados_diario', cts_executados_diario)
     diff_exec_to_previsto = cts_executados_diario - cts_previstos_diario
     dias = len(diario)
     total_for_recalculate = 0
@@ -127,18 +192,19 @@ def update_pos_execute(project_id, diario_id, cts_executados):
         total_for_recalculate = sum_test_case_previstos_for_update(project_id) + diff_exec_to_previsto
 
     media = calculate_avg(total_for_recalculate, dias)
-    print('media', media)
 
     for d in diario:
         Diario.objects.filter(pk=d.id).update(cts_previstos=media)
-        print(d.data_execucao)
 
     fit_planning_for_update(project_id, total_for_recalculate, len(diario))
-    print('-----------', total_for_recalculate)
 
 
-# soma a quantidade de casos de teste ainda não executados
 def sum_test_case_previstos_for_update(project_id):
+    """
+
+    :param project_id: id projeto
+    :return: soma dos casos de teste ainda não executados
+    """
     cts_previstos = Diario.objects.filter(projeto_id=project_id,
                                           cts_executados=0).aggregate(
         cts_previstos=Sum('cts_previstos')
@@ -159,13 +225,22 @@ def sum_test_case_previstos_for_update(project_id):
     return total_cts
 
 
-# retorna a quantidade de casos executados no dia
 def get_ct_exec_in_diario(cts_executados):
+    """
+
+    :param cts_executados: Quantidade de cts executados no dia (valor informado
+    no campo da tela)
+    :return: quantidade de cts executados no dia
+    """
     return cts_executados
 
 
-# retorna a quantidade de casos previstos no dia
 def get_cts_previstos_in_diario(diario_id):
+    """
+
+    :param diario_id: id do diario
+    :return: quantidade de cts previstos para a execução no dia
+    """
     diario = Diario.objects.get(pk=diario_id)
     cts_previstos = diario.cts_previstos
 
@@ -173,6 +248,17 @@ def get_cts_previstos_in_diario(diario_id):
 
 
 def fit_planning_for_update(project_id, cts, number_of_days):
+    """
+
+    :param project_id: id do projeto
+    :param cts: quantidade de casos de testes
+    :param number_of_days: quantidade de dias para a execução
+    :return: Ajusta no db em ordem decrescente:
+        se quantidade de cts executados for maior que a quantidade planejada,
+        retira um CT até ajustar à quantidade planejada.
+        se a quantidade de cts executados for menor que a quantidade planejada,
+        adiciona um ct em orde crescente por data.
+    """
     diff = diff_planejado_2_diff_sum_diario(project_id)
     cont = 0
     while cont < diff:
@@ -190,6 +276,11 @@ def fit_planning_for_update(project_id, cts, number_of_days):
 
 
 def get_total_cts_executados(project_id):
+    """
+
+    :param project_id: id do projeto
+    :return: quantidade de cts executados
+    """
     cts_executados = Diario.objects.filter(projeto_id=project_id,
                                            cts_executados__gt=0).aggregate(
         cts_executados=Sum('cts_executados')
@@ -200,6 +291,12 @@ def get_total_cts_executados(project_id):
 
 
 def diff_planejado_2_diff_sum_diario(project_id):
+    """
+
+    :param project_id: id do projeto
+    :return: a diferença entre o previsto e o planejado para saber quantos cts
+    devem ser removidos ou inseridos, para utilização em fit_planning_for_update
+    """
     sum_ct_restante = sum_test_case_previstos_for_update(project_id)
     total_ct_prj = Projeto.objects.get(pk=project_id).quantidade_ct
     total_cts_executados = get_total_cts_executados(project_id)
