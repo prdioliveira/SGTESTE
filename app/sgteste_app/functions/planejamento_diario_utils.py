@@ -187,7 +187,7 @@ def add_planning(initial_date, final_date, cts, project_id, number_of_days):
         cts_adicionais += int(cts)
         Projeto.objects.filter(pk=project_id).update(
             cts_adicionais=cts_adicionais)
-        
+
     except DatabaseError as error:
         print(error)
     for d in iterdates(initial_date, final_date):
