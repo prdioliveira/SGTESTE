@@ -37,6 +37,7 @@ def executar_teste(request, pk, projeto_id):
     diario = get_object_or_404(Diario, pk=pk, projeto_id=projeto_id)
     if request.method == 'POST':
         executados = request.POST.get('cts_executados')
+        cts_cancelados = request.POST.get('cts_cancelados')
         form = DiarioForm(request.POST, instance=diario)
         if form.is_valid():
             fdiario = form.save(commit=False)
@@ -45,13 +46,13 @@ def executar_teste(request, pk, projeto_id):
                 if status_prj != 2:
                     Projeto.objects.filter(pk=projeto_id).update(status_projeto_id=2)
                     fdiario.save()
-                    update_pos_execute(project_id=projeto_id, diario_id=pk, cts_executados=executados)
+                    update_pos_execute(project_id=projeto_id, diario_id=pk, cts_executados=executados, cts_cancelados=cts_cancelados)
                 else:
                     fdiario.save()
-                    update_pos_execute(project_id=projeto_id, diario_id=pk, cts_executados=executados)
+                    update_pos_execute(project_id=projeto_id, diario_id=pk, cts_executados=executados, cts_cancelados=cts_cancelados)
             else:
                 fdiario.save()
-                update_pos_execute(project_id=projeto_id, diario_id=pk, cts_executados=executados)
+                update_pos_execute(project_id=projeto_id, diario_id=pk, cts_executados=executados, cts_cancelados=cts_cancelados)
             return redirect('sgteste_app:lista_execucao', projeto_id)
     else:
         form = DiarioForm(instance=diario)
