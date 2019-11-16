@@ -48,8 +48,7 @@ def lista_execucao(request, projeto_id):
                 'diferenca_cts': diferenca_cts,
                 'dias_adicionais': dias_adicionais,
                 'prj': prj,
-                'cts_pendentes': cts_pendentes}
-        )
+                'cts_pendentes': cts_pendentes})
 
 
 def executar_teste(request, pk, projeto_id):
