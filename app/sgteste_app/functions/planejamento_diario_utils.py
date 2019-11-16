@@ -222,71 +222,71 @@ def update_pos_execute(project_id, diario_id, cts_executados, cts_cancelados):
             diff_exec_to_previsto = diff_exec_to_previsto * -1
             if cts_cancelados > 0:
                 while cont < cts_cancelados:
+                    if alt <= dias:
+                        alt = 0
                     diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0, cts_previstos__gt=0).order_by('data_execucao')[alt]
                     troca = diario.cts_previstos - 1
                     Diario.objects.filter(pk=diario.id).update(cts_previstos=troca)
                     alt += 1
-                    if alt == dias:
-                        alt = 0
                     cont += 1
 
                 cont = 0
                 while cont < diff_exec_to_previsto:
+                    if alt <= dias:
+                        alt = 0
                     diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0, cts_previstos__gt=0).order_by('data_execucao')[alt]
                     troca = diario.cts_previstos
                     Diario.objects.filter(pk=diario.id).update(cts_previstos=troca + 1)
                     alt += 1
-                    if alt == dias:
-                        alt = 0
                     cont += 1
             else:
                 cont = 0
                 while cont < diff_exec_to_previsto:
+                    if alt <= dias:
+                        alt = 0
                     diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0, cts_previstos__gt=0).order_by('data_execucao')[alt]
                     troca = diario.cts_previstos
                     Diario.objects.filter(pk=diario.id).update(cts_previstos=troca + 1)
                     alt += 1
-                    if alt == dias:
-                        alt = 0
                     cont += 1
         else:
             if diff_exec_to_previsto == 0 and cts_cancelados > 0:
                 while cont < cts_cancelados:
+                    if alt <= dias:
+                        alt = 0
                     diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0, cts_previstos__gt=0).order_by('-data_execucao')[alt]
                     troca = diario.cts_previstos - 1
                     Diario.objects.filter(pk=diario.id).update(cts_previstos=troca)
                     alt += 1
-                    if alt == dias:
-                        alt = 0
                     cont += 1
             else:
                 if cts_cancelados > 0:
                     while cont < cts_cancelados:
+                        if alt <= dias:
+                            alt = 0
                         diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0, cts_previstos__gt=0).order_by('-data_execucao')[alt]
                         troca = diario.cts_previstos - 1
                         Diario.objects.filter(pk=diario.id).update(cts_previstos=troca)
                         alt += 1
-                        if alt == dias:
-                            alt = 0
                         cont += 1
 
                     cont = 0
                     while cont < diff_exec_to_previsto:
+                        if alt <= dias:
+                            alt = 0
                         diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0, cts_previstos__gt=0).order_by('-data_execucao')[alt]
                         troca = diario.cts_previstos
                         Diario.objects.filter(pk=diario.id).update(cts_previstos=troca - 1)
                         alt += 1
-                        if alt == dias:
-                            alt = 0
                         cont += 1
                 else:
                     while cont < diff_exec_to_previsto:
+                        if alt <= dias:
+                            alt = 0
                         diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0, cts_previstos__gt=0).order_by('-data_execucao')[alt]
                         troca = diario.cts_previstos
                         Diario.objects.filter(pk=diario.id).update(cts_previstos=troca - 1)
                         alt += 1
-                        if alt == dias:
-                            alt = 0
                         cont += 1
 
     else:
@@ -350,24 +350,24 @@ def refazer_media_pos_add_planning(project_id):
         alt = 0
         if diff > 0:
             while cont < diff:
+                if alt == diff:
+                    alt = 0
                 diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0).order_by('-data_execucao')[alt]
                 troca = diario.cts_previstos
                 Diario.objects.filter(pk=diario.id).update(cts_previstos=troca - 1)
                 alt += 1
-                if alt == diff:
-                    alt = 0
                 cont += 1
         else:
             diff = diff * -1
             cont = 0
             alt = 0
             while cont < diff:
+                if alt == diff:
+                    alt = 0
                 diario = Diario.objects.filter(projeto_id=project_id, cts_executados=0).order_by('-data_execucao')[alt]
                 troca = diario.cts_previstos
                 Diario.objects.filter(pk=diario.id).update(cts_previstos=troca + 1)
                 alt += 1
-                if alt == diff:
-                    alt = 0
                 cont += 1
     except DatabaseError as error:
         print(error)

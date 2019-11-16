@@ -16,7 +16,7 @@
                 <table class="table table-light text-center">
 
                     {% for d in diario %}
-                        {% cycle '<tr>' '' '' '' %}
+                        {% cycle '<tr>' '' '' '' '' %}
                         {% if d.cts_executados == 0 %}
                             <td>
                                 {% if prj.status_projeto_id != 3 %}
@@ -39,7 +39,7 @@
 
                             </td>
                         {% endif %}
-                        {% cycle '' '' '' '</tr>' %}
+                        {% cycle '' '' '' '' '</tr>' %}
                     {% endfor %}
 
                 </table>
