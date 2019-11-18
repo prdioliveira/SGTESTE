@@ -2,10 +2,13 @@ from datetime import datetime, timedelta
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from app.sgteste_app.forms.projeto_forms import ProjetoForm
+from app.sgteste_app.functions.gerencia_functions import get_ct_restante, \
+    get_cts_adicionais, get_dias_adicionais
 from app.sgteste_app.models.fixtures_models import StatusProjeto
 from app.sgteste_app.models.projeto_models import Projeto
 from app.sgteste_app.functions.utils import paginattion_create
-from app.sgteste_app.functions.planejamento_diario_utils import create_planning
+from app.sgteste_app.functions.planejamento_diario_utils import create_planning, \
+    get_last_date_diario
 
 
 def cadastrar_projeto(request):
@@ -131,3 +134,23 @@ def excluir_projeto(request, pk):
     if projeto.status_projeto_id == 1:
         projeto.delete()
         return redirect('sgteste_app:pesquisar_projeto')
+
+
+def visualizar_projeto(request, pk):
+    projeto = get_object_or_404(Projeto, pk=pk)
+    data_final = get_last_date_diario(projeto.id)
+    cts_adicionais = get_cts_adicionais(projeto)
+    quantidade_ct = projeto.quantidade_ct + cts_adicionais
+    dias_adicionais = get_dias_adicionais(projeto)
+    total_dias = projeto.dias_execucao + dias_adicionais
+
+    template = 'projeto/visualizar-projeto.html'
+    context = {
+        'projeto': projeto,
+        'data_final': data_final,
+        'quantidade_ct': quantidade_ct,
+        'dias_adicionais': dias_adicionais,
+        'total_dias': total_dias
+    }
+
+    return render(request, template, context)

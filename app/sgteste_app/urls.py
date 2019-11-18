@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^pesquisar-projeto/$', projeto_views.pesquisar_projeto, name='pesquisar_projeto'),
     url(r'^cadastro-projeto/(?P<pk>[0-9]+)/editar/$', projeto_views.editar_projeto, name='editar_projeto'),
     url(r'^cadastro-projeto/(?P<pk>[0-9]+)/delete/$', projeto_views.excluir_projeto, name='deletar_projeto'),
+    url(r'^visualizar-projeto/(?P<pk>[0-9]+)/$', projeto_views.visualizar_projeto, name='visualizar_projeto'),
 
     #Diario
     url(r'^diario-execucao/(?P<projeto_id>[0-9]+)/$', diario_views.lista_execucao, name='lista_execucao'),

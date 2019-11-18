@@ -444,3 +444,10 @@ def refazer_media_pos_add_planning(project_id):
                 cont += 1
     except DatabaseError as error:
         print(error)
+
+
+def get_last_date_diario(project_id):
+    last_date_execute = Diario.objects.filter(projeto_id=project_id).order_by(
+        '-data_execucao')[0].data_execucao
+
+    return last_date_execute
