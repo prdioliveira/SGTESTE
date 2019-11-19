@@ -281,8 +281,8 @@ def update_pos_execute(project_id, diario_id, cts_executados, cts_cancelados):
                     if alt <= dias:
                         alt = 0
                     diario = Diario.objects.filter(
-                        projeto_id=project_id, cts_executados=0,
-                        cts_previstos__gt=0).order_by('data_execucao')[alt]
+                        projeto_id=project_id, cts_executados=0).order_by(
+                        'data_execucao')[alt]
 
                     troca = diario.cts_previstos
                     Diario.objects.filter(pk=diario.id).update(
