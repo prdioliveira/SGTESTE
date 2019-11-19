@@ -154,8 +154,11 @@ def fit_planning(project_id, cts, number_of_days):
     """
     diff = diff_test_case_previstos(project_id)
     cont = 0
+    alt = 0
     while cont < diff:
         try:
+            # if alt == number_of_days:
+            #     alt = 0
             id_diario = Diario.objects.filter(
                 projeto_id=project_id, cts_executados=0).order_by(
                 '-data_execucao')[cont].id
@@ -278,8 +281,8 @@ def update_pos_execute(project_id, diario_id, cts_executados, cts_cancelados):
                     if alt <= dias:
                         alt = 0
                     diario = Diario.objects.filter(
-                        projeto_id=project_id, cts_executados=0,
-                        cts_previstos__gt=0).order_by('data_execucao')[alt]
+                        projeto_id=project_id, cts_executados=0).order_by(
+                        'data_execucao')[alt]
 
                     troca = diario.cts_previstos
                     Diario.objects.filter(pk=diario.id).update(
@@ -444,3 +447,10 @@ def refazer_media_pos_add_planning(project_id):
                 cont += 1
     except DatabaseError as error:
         print(error)
+
+
+def get_last_date_diario(project_id):
+    last_date_execute = Diario.objects.filter(projeto_id=project_id).order_by(
+        '-data_execucao')[0].data_execucao
+
+    return last_date_execute

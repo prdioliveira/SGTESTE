@@ -1,0 +1,103 @@
+{% extends 'base/base.html' %}
+{% load app_extras %}
+
+{% block title %}
+    Visualizar | Projeto
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="panel">
+            <div class="panel-heading">
+                <h2>Dados do Projeto</h2>
+            </div>
+            <div class="panel-body">
+
+                <div class="form-group row">
+                    <div class="col-md-12">
+                        <label>Nome do Projeto</label>
+                        <p>{{ projeto.nome_projeto }}</p>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <label>Data inicial</label>
+                        <p>{{ projeto.data_inicial|escape }}</p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Data Final</label>
+                        <p>{{ data_final|escape }}</p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Dias de execução</label>
+                        <p>{{ projeto.dias_execucao }}</p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Quantidade inicial de CTs</label>
+                        <p>{{ projeto.quantidade_ct }}</p>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <label>Quantidade total de CTs</label>
+                        <p>{{ quantidade_ct }}</p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>CTs adicionais</label>
+                        <p class="text text-danger">{{ projeto.cts_adicionais }}</p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Dias adicionais</label>
+                        <p class="text text-danger">{{ dias_adicionais }}</p>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Total de dias</label>
+                        <p>{{ total_dias }}</p>
+                    </div>
+
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-12">
+                        <label>Responsável pela execução</label>
+                        <p>{{ projeto.responsavel }}</p>
+                    </div>
+                </div>
+
+                {% if projeto.data_conclusao != None %}
+                    <div class="form-group row">
+                        <div class="col-md-12">
+                            <label>Data de Conclusão</label>
+                            <p>{{ projeto.data_conclusao|escape }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="form-group row">
+                    <div class="col-md-12">
+                        <label>Status do projeto</label>
+                        <p class="text text-info"><strong>{{ projeto.status_projeto }}</strong></p>
+                    </div>
+                </div>
+
+                <nav class="nav-fill">
+                    <div class="form-group">
+                        <a id="btn-voltar" class="btn btn-primary" href="{% url 'sgteste_app:pesquisar_projeto' %}">
+                            <span class="glyphicon glyphicon-arrow-left"></span>
+                            Voltar
+                        </a>
+                    </div>
+                </nav>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

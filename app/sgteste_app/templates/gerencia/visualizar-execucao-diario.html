@@ -4,7 +4,7 @@
 {% block title %}
     Visualizar | Acompanhamento Diario
 {% endblock %}
-
+{% block resp %}Responsável: {{ projeto.responsavel }} {% endblock %}
 {% block content %}
     <div class="container">
         <div class="panel">
@@ -17,43 +17,43 @@
                 <div class="form-group row">
                     <div class="col-md-12">
                         <label>Data de Execução</label>
-                        {{ diario.data_execucao }}
+                        <p>{{ diario.data_execucao }}</p>
                     </div>
                 </div>
 
                 <div class="form-group row">
                     <div class="col-md-3">
-                        <label>Previstos:</label>
-                        {{ diario.cts_previstos }}
+                        <label>Previstos</label>
+                        <p>{{ diario.cts_previstos }}</p>
                     </div>
 
                     <div class="col-md-3">
-                        <label>Executados:</label>
-                        {{ diario.cts_executados }}
+                        <label>Executados</label>
+                        <p>{{ diario.cts_executados }}</p>
                     </div>
 
                     <div class="col-md-3">
-                        <label>Bugs Blocantes:</label>
-                        {{ diario.bugs_encontrados }}
+                        <label>Bugs Blocantes</label>
+                        <p>{{ diario.bugs_encontrados }}</p>
                     </div>
 
                     <div class="col-md-3">
-                        <label>CTs Cancelados:</label>
-                        {{ diario.cts_cancelados }}
+                        <label>CTs Cancelados</label>
+                        <p>{{ diario.cts_cancelados }}</p>
                     </div>
                 </div>
                 {% if projeto.data_conclusao != None %}
                     <div class="form-group row">
                         <div class="col-md-12">
-                            <label>Data de Conclusão:</label>
-                            {{ projeto.data_conclusao|escape }}
+                            <label>Data de Conclusão</label>
+                            <p>{{ projeto.data_conclusao|escape }}</p>
                         </div>
                     </div>
                 {% endif %}
 
                 <div class="form-group row">
                     <div class="col-md-12">
-                        <label>Observação:</label>
+                        <label>Observação</label>
                         {% if diario.cts_executados > 0 %}
                             <p>{{ diario.observacao|linebreaksbr }}</p>
                         {% else %}
@@ -64,7 +64,7 @@
 
                 <nav class="nav-fill">
                     <div class="form-group">
-                        <a class="btn btn-primary" href="{% url 'sgteste_app:acompanhamento_diario' projeto_id=projeto.pk %}">
+                        <a class="btn btn-primary" id="btn-voltar" href="{% url 'sgteste_app:acompanhamento_diario' projeto_id=projeto.pk %}">
                             <span class="glyphicon glyphicon-arrow-left"></span>
                             Voltar
                         </a>

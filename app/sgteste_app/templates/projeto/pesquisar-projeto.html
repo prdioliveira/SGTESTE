@@ -66,8 +66,13 @@
                             <td>{{ projeto.responsavel }}</td>
                             <td class="text-center">{{ projeto.status_projeto }}</td>
                             <td class="text-center">
+
+                                <a class="btn btn-sm btn-primary" id="view_project" data-toggle="tooltip" data-placement="top" title="Ver projeto" href="{% url 'sgteste_app:visualizar_projeto' pk=projeto.pk %}">
+                                    <span class="glyphicon glyphicon-eye-open text-center"></span>
+                                </a>
+
                                 {% if projeto.status_projeto_id != 1 %}
-                                    <a class="btn btn-sm btn-success disabled" id="edit_project" data-toggle="tooltip" data-placement="top" title="Editar projeto" href="{% url 'sgteste_app:editar_projeto' pk=projeto.pk %}">
+                                    <a class="btn btn-sm btn-success disabled" id="edit_project" data-toggle="tooltip" data-placement="top" title="Editar projeto" href="#">
                                         <span class="glyphicon glyphicon-pencil text-center"></span>
                                     </a>
                                 {% else %}
@@ -85,7 +90,7 @@
                                     </a>
                                 {% endif %}
                                 {% if projeto.status_projeto_id == 3 %}
-                                    <a class="btn btn-sm btn-info disabled" id="execute_test" data-toggle="tooltip" data-placement="top" title="Executar teste" href="{% url 'sgteste_app:lista_execucao' projeto_id=projeto.pk %}">
+                                    <a class="btn btn-sm btn-info disabled" id="execute_test" data-toggle="tooltip" data-placement="top" title="Executar teste" href="#">
                                         <span class="glyphicon glyphicon-folder-open text-center"></span>
                                     </a>
                                 {% else %}

@@ -30,7 +30,7 @@
                     <tbody>
                     {% for d in diario %}
                         <tr>
-                            <td><a href="{% url 'sgteste_app:visualizar_acompanhamento_diario' projeto_id=projeto.id pk=d.pk %}">{{ d.data_execucao|escape }}</a></td>
+                            <td><a id="lnk-{{ d.pk }}" href="{% url 'sgteste_app:visualizar_acompanhamento_diario' projeto_id=projeto.id pk=d.pk %}">{{ d.data_execucao|escape }}</a></td>
                             <td class="align-middle text-center">{{ d.cts_previstos }}</td>
                             {% if d.cts_executados >= d.cts_previstos %}
                                 <td class="text-primary text-center"><strong>{{ d.cts_executados }}</strong></td>

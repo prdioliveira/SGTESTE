@@ -1,11 +1,14 @@
 from datetime import datetime, timedelta
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
-from app.sgteste_app.forms.projeto_forms import ProjetoForm
+from app.sgteste_app.forms.projeto_forms import ProjetoForm, ProjetoEditForm
+from app.sgteste_app.functions.gerencia_functions import get_cts_adicionais, \
+    get_dias_adicionais
 from app.sgteste_app.models.fixtures_models import StatusProjeto
 from app.sgteste_app.models.projeto_models import Projeto
 from app.sgteste_app.functions.utils import paginattion_create
-from app.sgteste_app.functions.planejamento_diario_utils import create_planning
+from app.sgteste_app.functions.planejamento_diario_utils import create_planning, \
+    get_last_date_diario
 
 
 def cadastrar_projeto(request):
@@ -104,11 +107,27 @@ def pesquisar_projeto(request):
 def editar_projeto(request, pk):
     projeto = get_object_or_404(Projeto, pk=pk)
     if request.method == 'POST':
-        form = ProjetoForm(request.POST, instance=projeto)
+        form = ProjetoEditForm(request.POST, instance=projeto)
         if form.is_valid():
             projeto = form.save(commit=False)
             if projeto.status_projeto_id == 1:
                 projeto.save()
+                # Criando o diario de teste
+                data_inicial = datetime.strptime(
+                    str(projeto.data_inicial),
+                    '%Y-%m-%d').date()
+
+                data_final = datetime.strptime(
+                    str(projeto.data_inicial),
+                    '%Y-%m-%d').date() + timedelta(days=projeto.dias_execucao)
+
+                create_planning(
+                    initial_date=data_inicial,
+                    final_date=data_final,
+                    cts=projeto.quantidade_ct,
+                    project_id=projeto.id,
+                    number_of_days=projeto.dias_execucao
+                )
             else:
                 return HttpResponseForbidden('<h1>Permissão Negada</h1><br>'
                                              '<a href="/pesquisar-projeto/">'
@@ -116,7 +135,7 @@ def editar_projeto(request, pk):
 
             return redirect('sgteste_app:pesquisar_projeto')
     else:
-        form = ProjetoForm(instance=projeto)
+        form = ProjetoEditForm(instance=projeto)
         return render(
             request,
             'projeto/editar-projeto.html',
@@ -131,3 +150,23 @@ def excluir_projeto(request, pk):
     if projeto.status_projeto_id == 1:
         projeto.delete()
         return redirect('sgteste_app:pesquisar_projeto')
+
+
+def visualizar_projeto(request, pk):
+    projeto = get_object_or_404(Projeto, pk=pk)
+    data_final = get_last_date_diario(projeto.id)
+    cts_adicionais = get_cts_adicionais(projeto)
+    quantidade_ct = projeto.quantidade_ct + cts_adicionais
+    dias_adicionais = get_dias_adicionais(projeto)
+    total_dias = projeto.dias_execucao + dias_adicionais
+
+    template = 'projeto/visualizar-projeto.html'
+    context = {
+        'projeto': projeto,
+        'data_final': data_final,
+        'quantidade_ct': quantidade_ct,
+        'dias_adicionais': dias_adicionais,
+        'total_dias': total_dias
+    }
+
+    return render(request, template, context)
