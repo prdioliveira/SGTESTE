@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
-from app.sgteste_app.forms.projeto_forms import ProjetoForm
-from app.sgteste_app.functions.gerencia_functions import get_ct_restante, \
-    get_cts_adicionais, get_dias_adicionais
+from app.sgteste_app.forms.projeto_forms import ProjetoForm, ProjetoEditForm
+from app.sgteste_app.functions.gerencia_functions import get_cts_adicionais, \
+    get_dias_adicionais
 from app.sgteste_app.models.fixtures_models import StatusProjeto
 from app.sgteste_app.models.projeto_models import Projeto
 from app.sgteste_app.functions.utils import paginattion_create
@@ -107,11 +107,27 @@ def pesquisar_projeto(request):
 def editar_projeto(request, pk):
     projeto = get_object_or_404(Projeto, pk=pk)
     if request.method == 'POST':
-        form = ProjetoForm(request.POST, instance=projeto)
+        form = ProjetoEditForm(request.POST, instance=projeto)
         if form.is_valid():
             projeto = form.save(commit=False)
             if projeto.status_projeto_id == 1:
                 projeto.save()
+                # Criando o diario de teste
+                data_inicial = datetime.strptime(
+                    str(projeto.data_inicial),
+                    '%Y-%m-%d').date()
+
+                data_final = datetime.strptime(
+                    str(projeto.data_inicial),
+                    '%Y-%m-%d').date() + timedelta(days=projeto.dias_execucao)
+
+                create_planning(
+                    initial_date=data_inicial,
+                    final_date=data_final,
+                    cts=projeto.quantidade_ct,
+                    project_id=projeto.id,
+                    number_of_days=projeto.dias_execucao
+                )
             else:
                 return HttpResponseForbidden('<h1>Permissão Negada</h1><br>'
                                              '<a href="/pesquisar-projeto/">'
@@ -119,7 +135,7 @@ def editar_projeto(request, pk):
 
             return redirect('sgteste_app:pesquisar_projeto')
     else:
-        form = ProjetoForm(instance=projeto)
+        form = ProjetoEditForm(instance=projeto)
         return render(
             request,
             'projeto/editar-projeto.html',

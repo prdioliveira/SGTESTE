@@ -154,8 +154,11 @@ def fit_planning(project_id, cts, number_of_days):
     """
     diff = diff_test_case_previstos(project_id)
     cont = 0
+    alt = 0
     while cont < diff:
         try:
+            # if alt == number_of_days:
+            #     alt = 0
             id_diario = Diario.objects.filter(
                 projeto_id=project_id, cts_executados=0).order_by(
                 '-data_execucao')[cont].id

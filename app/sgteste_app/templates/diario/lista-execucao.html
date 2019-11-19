@@ -53,7 +53,7 @@
 
                 <nav class="nav-fill">
                         <div class="form-group">
-                            {% if prj.status_projeto_id != 3 %}
+                            {% if prj.status_projeto_id == 2 %}
                                 <a class="btn btn-danger active" role="button" aria-pressed="true" href="{% url 'sgteste_app:adicionar_planejamento' projeto_id=projeto_id %}">
                                     <span class="glyphicon glyphicon-wrench"></span>
                                     Manutenção
