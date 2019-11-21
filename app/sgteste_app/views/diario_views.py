@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from app.sgteste_app.forms.diario_forms import DiarioForm, AddInDiarioForm
 from app.sgteste_app.functions.gerencia_functions import get_cts_adicionais
+from app.sgteste_app.functions.gerencia_functions import get_dias_executados
 from app.sgteste_app.functions.gerencia_functions import get_dias_adicionais
 from app.sgteste_app.functions.gerencia_functions import get_ct_restante
 from app.sgteste_app.functions.utils import url_for_create_project
@@ -18,7 +19,7 @@ from app.sgteste_app.functions.planejamento_diario_utils import update_pos_execu
 def lista_execucao(request, projeto_id):
     if request.method == 'POST':
         if get_ct_restante(projeto_id) == 0:
-            concluir_projeto(Projeto, projeto_id)
+            concluir_projeto(Projeto, projeto_id, request)
             return redirect('sgteste_app:pesquisar_projeto')
         else:
             tag_inicial = '<h2>'
@@ -148,7 +149,7 @@ def adicionar_planejamento(request, projeto_id):
         })
 
 
-def concluir_projeto(Object, object_id):
+def concluir_projeto(Object, object_id, request):
     data_exec = Diario.objects.filter(projeto_id=object_id).order_by(
         '-data_execucao')[0].data_execucao
 
@@ -156,3 +157,21 @@ def concluir_projeto(Object, object_id):
         data_conclusao=dt.strftime(data_exec, '%Y-%m-%d'))
 
     Object.objects.filter(pk=object_id).update(status_projeto_id=3)
+
+    # Envio de Email
+    projeto = Object.objects.get(pk=object_id)
+    project_url = url_for_create_project(request, projeto.id)
+    dias_executados = get_dias_executados(projeto.id)
+
+    htmly = render_to_string(
+        'mail_message/message_finsh_project.html',
+        {
+            'projeto': projeto,
+            'project_url': project_url,
+            'dias_executados': dias_executados,
+        })
+
+    subject_email = 'Conclusão de projeto'
+    content_html = htmly
+
+    send_email(subject_email, content_html)
