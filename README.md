@@ -46,14 +46,13 @@ python-http-client==3.2.1
 pytz==2019.3
 reportlab==3.5.32
 selenium==3.141.0
-sendgrid==6.1.0
 urllib3==1.25.6
 ```
 
 ### Enviar email:
 
 ```
-#### Criar as variaveis de ambiente:
+Criar as variaveis de ambiente:
 
 EMAIL_HOST=HOST_DO_EMAIL
 EMAIL_HOST_PASSWORD=PASSWORD_DO_EMAIL
@@ -70,6 +69,10 @@ python manage.py test --settings=SGTESTE.settings.teste
 
 ## Running the project
 
+### Execução inicial
+Após a criação da base de testes, conforme settings.local da aplicação, executar os comandos abaixo para a criação das tabelas e carregamento das fixtures do projeto.
+*Obs.: Executar apenas uma unica vez*  
+
 ```
 python manage.py makemigrations
 python manage.py migrate
@@ -78,6 +81,7 @@ python manage.py loaddata initial_data.json
 
 ### Running the project
 
+Para executar o projeto em ambiente local
 ```
 python manage.py runserver 0.0.0.0:8000
 ```
