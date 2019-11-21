@@ -33,7 +33,7 @@ Acessar o diretorio onde ficará o projeto e executar o comando
 git clone https://github.com/prdioliveira/SGTESTE.git
 ```
 
-Instalando as dependências do proeto
+Instalando as dependências do projeto
 
 ```
 pip install requirements/requirements/.txt
