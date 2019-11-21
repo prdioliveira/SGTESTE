@@ -1,0 +1,11 @@
+<html>
+<body>
+    <p >O projeto <strong>{{projeto.nome_projeto}}</strong> foi cadadstrado.</p>
+    <p><strong>Nome do Projeto: </strong>{{ projeto.nome_projeto }}</p>
+    <p><strong>Data de inicio: </strong>{{ projeto.data_inicial|escape }}</p>
+    <p><strong>Quantidade de dias para execução: </strong>{{ projeto.dias_execucao }}</p>
+    <p><strong>Quantidade de casos de teste: </strong>{{ projeto.quantidade_ct }}</p>
+
+    <p>Acompanhe <a href={{ project_url }}>aqui</a></p>
+</body>
+</html>

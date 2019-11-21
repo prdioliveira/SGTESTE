@@ -2,13 +2,16 @@ from datetime import datetime as dt
 import datetime
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
 from app.sgteste_app.forms.diario_forms import DiarioForm, AddInDiarioForm
-from app.sgteste_app.functions.gerencia_functions import get_cts_adicionais, \
-    get_dias_adicionais, get_ct_restante
+from app.sgteste_app.functions.gerencia_functions import get_cts_adicionais
+from app.sgteste_app.functions.gerencia_functions import get_dias_adicionais
+from app.sgteste_app.functions.gerencia_functions import get_ct_restante
+from app.sgteste_app.functions.utils import url_for_create_project, send_email
 from app.sgteste_app.models.diario_models import Diario
 from app.sgteste_app.models.projeto_models import Projeto
-from app.sgteste_app.functions.planejamento_diario_utils import add_planning, \
-    update_pos_execute
+from app.sgteste_app.functions.planejamento_diario_utils import add_planning
+from app.sgteste_app.functions.planejamento_diario_utils import update_pos_execute
 
 
 def lista_execucao(request, projeto_id):
@@ -89,6 +92,24 @@ def executar_teste(request, pk, projeto_id):
                     diario_id=pk,
                     cts_executados=executados,
                     cts_cancelados=cts_cancelados)
+
+            # Envio de Email
+            projeto = Projeto.objects.get(pk=diario.projeto_id)
+            nome_projeto = projeto.nome_projeto
+            project_url = url_for_create_project(request, projeto.id)
+
+            htmly = render_to_string(
+                'mail_message/message_diario_update.html',
+                {
+                    'nome_projeto': nome_projeto,
+                    'project_url': project_url,
+                    'diario': diario
+                })
+
+            subject_email = 'Atualização de projeto'
+            content_html = htmly
+
+            send_email(subject_email, content_html)
 
             return redirect('sgteste_app:lista_execucao', projeto_id)
     else:
