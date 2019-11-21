@@ -1,10 +1,5 @@
-from django.core.mail import EmailMultiAlternatives
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-import os
 from .fixtures_models import StatusProjeto
-from app.sgteste_app.functions.utils import send_email
 
 
 class Projeto(models.Model):

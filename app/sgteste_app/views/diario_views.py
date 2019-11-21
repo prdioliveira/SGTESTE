@@ -7,7 +7,8 @@ from app.sgteste_app.forms.diario_forms import DiarioForm, AddInDiarioForm
 from app.sgteste_app.functions.gerencia_functions import get_cts_adicionais
 from app.sgteste_app.functions.gerencia_functions import get_dias_adicionais
 from app.sgteste_app.functions.gerencia_functions import get_ct_restante
-from app.sgteste_app.functions.utils import url_for_create_project, send_email
+from app.sgteste_app.functions.utils import url_for_create_project
+from app.sgteste_app.functions.mailer import send_email
 from app.sgteste_app.models.diario_models import Diario
 from app.sgteste_app.models.projeto_models import Projeto
 from app.sgteste_app.functions.planejamento_diario_utils import add_planning

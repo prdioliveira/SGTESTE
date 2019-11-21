@@ -1,6 +1,4 @@
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.core.mail import EmailMultiAlternatives
-import os
 
 
 # https://simpleisbetterthancomplex.com/tutorial/2016/08/03/how-to-paginate-with-django.html
@@ -24,14 +22,3 @@ def url_for_create_project(request, project_id):
     full_url = host + dest_path + str(project_id)
 
     return full_url
-
-
-def send_email(subject_email, content_html):
-    email_to = os.environ.get('EMAIL_TO')
-    if email_to:
-        subject, from_email, to = subject_email, 'from@example.com', email_to
-        text_content = 'This is an important message.'
-        html_content = content_html
-        msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
-        msg.attach_alternative(html_content, "text/html")
-        msg.send()

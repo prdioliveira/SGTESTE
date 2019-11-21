@@ -11,7 +11,7 @@ from app.sgteste_app.functions.utils import paginattion_create
 from app.sgteste_app.functions.utils import url_for_create_project
 from app.sgteste_app.functions.planejamento_diario_utils import create_planning
 from app.sgteste_app.functions.planejamento_diario_utils import get_last_date_diario
-from app.sgteste_app.functions.utils import send_email
+from app.sgteste_app.functions.mailer import send_email
 
 
 def cadastrar_projeto(request):
