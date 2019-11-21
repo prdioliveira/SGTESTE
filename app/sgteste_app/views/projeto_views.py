@@ -1,14 +1,17 @@
 from datetime import datetime, timedelta
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
 from app.sgteste_app.forms.projeto_forms import ProjetoForm, ProjetoEditForm
-from app.sgteste_app.functions.gerencia_functions import get_cts_adicionais, \
-    get_dias_adicionais
+from app.sgteste_app.functions.gerencia_functions import get_cts_adicionais
+from app.sgteste_app.functions.gerencia_functions import get_dias_adicionais
 from app.sgteste_app.models.fixtures_models import StatusProjeto
 from app.sgteste_app.models.projeto_models import Projeto
 from app.sgteste_app.functions.utils import paginattion_create
-from app.sgteste_app.functions.planejamento_diario_utils import create_planning, \
-    get_last_date_diario
+from app.sgteste_app.functions.utils import url_for_create_project
+from app.sgteste_app.functions.planejamento_diario_utils import create_planning
+from app.sgteste_app.functions.planejamento_diario_utils import get_last_date_diario
+from app.sgteste_app.functions.mailer import send_email
 
 
 def cadastrar_projeto(request):
@@ -36,6 +39,21 @@ def cadastrar_projeto(request):
                 project_id=projeto.id,
                 number_of_days=projeto.dias_execucao
             )
+
+            #Envio de Email
+            project_url = url_for_create_project(request, projeto.id)
+
+            htmly = render_to_string(
+                'mail_message/message_create_project.html',
+                {
+                    'projeto': projeto,
+                    'project_url': project_url
+                })
+
+            subject_email = 'Novo projeto cadastrado'
+            content_html = htmly
+
+            send_email(subject_email, content_html)
 
             return redirect('sgteste_app:cadastrar_projeto')
     else:

@@ -14,3 +14,11 @@ def paginattion_create(obj_list, num_pages, request):
     except EmptyPage:
         obj_page = paginator.page(paginator.num_pages)
         return obj_page
+
+
+def url_for_create_project(request, project_id):
+    host = 'http://' + request.get_host()
+    dest_path = '/acompanhamento-diario/projeto/'
+    full_url = host + dest_path + str(project_id)
+
+    return full_url
