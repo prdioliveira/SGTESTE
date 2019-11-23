@@ -1,6 +1,5 @@
 from datetime import datetime as dt
 import datetime
-from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from app.sgteste_app.forms.diario_forms import DiarioForm, AddInDiarioForm
@@ -14,26 +13,19 @@ from app.sgteste_app.models.diario_models import Diario
 from app.sgteste_app.models.projeto_models import Projeto
 from app.sgteste_app.functions.planejamento_diario_utils import add_planning
 from app.sgteste_app.functions.planejamento_diario_utils import update_pos_execute
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def lista_execucao(request, projeto_id):
+    logger.info(lista_execucao.__name__)
     if request.method == 'POST':
         if get_ct_restante(projeto_id) == 0:
+            logger.info(projeto_id + ' pronto para conclusao')
+
             concluir_projeto(Projeto, projeto_id, request)
             return redirect('sgteste_app:pesquisar_projeto')
-        else:
-            tag_inicial = '<h2>'
-            tag_final = '</h2>'
-            msg1 = 'Permissão Negada. Não é possivel ' \
-                   'concluir projeto com ct pendente'
-
-            tag_br = '<br>'
-
-            tag_a = '<a href="/diario-execucao/' + str(projeto_id) + '"' \
-                    + '>Voltar</a>'
-
-            return HttpResponseForbidden(tag_inicial + msg1 + tag_final +
-                                         tag_br + tag_a)
     else:
         diario = Diario.objects.filter(projeto_id=projeto_id).order_by(
             'data_execucao')
@@ -57,6 +49,7 @@ def lista_execucao(request, projeto_id):
 
 
 def executar_teste(request, pk, projeto_id):
+    logger.info(executar_teste.__name__)
     diario = get_object_or_404(Diario, pk=pk, projeto_id=projeto_id)
     if request.method == 'POST':
         executados = request.POST.get('cts_executados')
@@ -72,46 +65,59 @@ def executar_teste(request, pk, projeto_id):
                     Projeto.objects.filter(pk=projeto_id).update(
                         status_projeto_id=2)
 
-                    fdiario.save()
-                    update_pos_execute(
-                        project_id=projeto_id,
-                        diario_id=pk,
-                        cts_executados=executados,
-                        cts_cancelados=cts_cancelados)
+                    if int(executados) <= get_ct_restante(projeto_id):
+                        fdiario.save()
+                        update_pos_execute(
+                            project_id=projeto_id,
+                            diario_id=pk,
+                            cts_executados=executados,
+                            cts_cancelados=cts_cancelados)
+                    else:
+                        logger.error('Nao foi possivel atualizar o projeto ' + str(projeto_id))
 
                 else:
+                    if int(executados) <= get_ct_restante(projeto_id):
+                        fdiario.save()
+                        update_pos_execute(
+                            project_id=projeto_id,
+                            diario_id=pk,
+                            cts_executados=executados,
+                            cts_cancelados=cts_cancelados)
+                    else:
+                        logger.error(
+                            'Nao foi possivel atualizar o projeto ' + str(
+                                projeto_id))
+
+            else:
+                if int(executados) <= get_ct_restante(projeto_id):
                     fdiario.save()
                     update_pos_execute(
                         project_id=projeto_id,
                         diario_id=pk,
                         cts_executados=executados,
                         cts_cancelados=cts_cancelados)
-
-            else:
-                fdiario.save()
-                update_pos_execute(
-                    project_id=projeto_id,
-                    diario_id=pk,
-                    cts_executados=executados,
-                    cts_cancelados=cts_cancelados)
+                else:
+                    logger.error('Nao foi possivel atualizar o projeto ' + str(
+                        projeto_id))
 
             # Envio de Email
-            projeto = Projeto.objects.get(pk=diario.projeto_id)
-            nome_projeto = projeto.nome_projeto
-            project_url = url_for_create_project(request, projeto.id)
+            if int(executados) <= get_ct_restante(projeto_id):
+                projeto = Projeto.objects.get(pk=diario.projeto_id)
+                nome_projeto = projeto.nome_projeto
+                project_url = url_for_create_project(request, projeto.id)
 
-            htmly = render_to_string(
-                'mail_message/message_diario_update.html',
-                {
-                    'nome_projeto': nome_projeto,
-                    'project_url': project_url,
-                    'diario': diario
-                })
+                htmly = render_to_string(
+                    'mail_message/message_diario_update.html',
+                    {
+                        'nome_projeto': nome_projeto,
+                        'project_url': project_url,
+                        'diario': diario
+                    })
 
-            subject_email = 'Atualização de projeto'
-            content_html = htmly
+                subject_email = 'Atualização de projeto'
+                content_html = htmly
 
-            send_email(subject_email, content_html)
+                send_email(subject_email, content_html)
 
             return redirect('sgteste_app:lista_execucao', projeto_id)
     else:
@@ -125,12 +131,14 @@ def executar_teste(request, pk, projeto_id):
 
 
 def adicionar_planejamento(request, projeto_id):
+    logger.info(adicionar_planejamento.__name__)
     projeto = Projeto.objects.get(pk=projeto_id).id
     data = Diario.objects.filter(projeto_id=projeto).order_by(
         '-data_execucao')[0].data_execucao
 
     cts_previstos = request.POST.get('cts_previstos')
     if request.method == 'POST':
+        logger.info('Atualizando planejamento ' + cts_previstos)
         add_planning(
             initial_date=data + datetime.timedelta(days=1),
             final_date=data + datetime.timedelta(days=2),
@@ -138,7 +146,8 @@ def adicionar_planejamento(request, projeto_id):
             project_id=projeto,
             number_of_days=1
         )
-        return redirect('sgteste_app:lista_execucao', projeto_id)
+    return redirect('sgteste_app:lista_execucao', projeto_id)
+
     form = AddInDiarioForm()
     return render(
         request,
@@ -150,6 +159,7 @@ def adicionar_planejamento(request, projeto_id):
 
 
 def concluir_projeto(Object, object_id, request):
+    logger.info(concluir_projeto.__name__)
     data_exec = Diario.objects.filter(projeto_id=object_id).order_by(
         '-data_execucao')[0].data_execucao
 

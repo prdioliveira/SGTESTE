@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from django.db import DatabaseError
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -12,9 +13,13 @@ from app.sgteste_app.functions.utils import url_for_create_project
 from app.sgteste_app.functions.planejamento_diario_utils import create_planning
 from app.sgteste_app.functions.planejamento_diario_utils import get_last_date_diario
 from app.sgteste_app.functions.mailer import send_email
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def cadastrar_projeto(request):
+    logger.debug(cadastrar_projeto.__name__)
     if request.method == 'POST':
         form = ProjetoForm(request.POST)
         if form.is_valid():
@@ -22,11 +27,12 @@ def cadastrar_projeto(request):
             status_oprojeto = StatusProjeto.objects.get(status='Planejado').id
             projeto.status_projeto_id = status_oprojeto
             projeto.save()
+            logger.info('Cadastrar projeto ' + projeto.nome_projeto)
 
             # Criando o diario de teste
-            data_inicial = datetime.strptime(
-                str(projeto.data_inicial),
-                '%Y-%m-%d').date()
+            data_inicial = datetime.strptime(str(projeto.data_inicial),
+                                             '%Y-%m-%d').date()
+            logger.info('Cadastrar projeto - data ' + str(data_inicial))
 
             data_final = datetime.strptime(
                 str(projeto.data_inicial),
@@ -42,7 +48,6 @@ def cadastrar_projeto(request):
 
             #Envio de Email
             project_url = url_for_create_project(request, projeto.id)
-
             htmly = render_to_string(
                 'mail_message/message_create_project.html',
                 {
@@ -62,6 +67,7 @@ def cadastrar_projeto(request):
 
 
 def pesquisar_projeto(request):
+    logger.debug(pesquisar_projeto.__name__)
     reg_per_page = 10
     all_projetos_list = Projeto.objects.order_by('-id')
     all_projetos = paginattion_create(all_projetos_list, reg_per_page, request)
@@ -80,6 +86,8 @@ def pesquisar_projeto(request):
             nome_projeto__icontains=query_projeto)|all_projetos_list.filter(
             responsavel__icontains=query_responsavel)
 
+        logger.info('Pesquisar projeto ' + str(all_projetos_list))
+
         all_projetos = paginattion_create(
             all_projetos_list, reg_per_page, request)
 
@@ -94,6 +102,8 @@ def pesquisar_projeto(request):
             all_projetos_list = all_projetos_list.filter(
                 nome_projeto__icontains=query_projeto)
 
+            logger.info('Pesquisar projeto ' + str(all_projetos_list))
+
             all_projetos = paginattion_create(
                 all_projetos_list, reg_per_page, request)
 
@@ -105,6 +115,8 @@ def pesquisar_projeto(request):
         else:
             all_projetos_list = all_projetos_list.filter(
                 responsavel__icontains=query_responsavel)
+
+            logger.info('Pesquisar projeto ' + str(all_projetos_list))
 
             all_projetos = paginattion_create(
                 all_projetos_list, reg_per_page, request)
@@ -123,6 +135,7 @@ def pesquisar_projeto(request):
 
 
 def editar_projeto(request, pk):
+    logger.debug(editar_projeto.__name__)
     projeto = get_object_or_404(Projeto, pk=pk)
     if request.method == 'POST':
         form = ProjetoEditForm(request.POST, instance=projeto)
@@ -130,6 +143,7 @@ def editar_projeto(request, pk):
             projeto = form.save(commit=False)
             if projeto.status_projeto_id == 1:
                 projeto.save()
+                logger.info('Editar projeto' + projeto.nome_projeto)
                 # Criando o diario de teste
                 data_inicial = datetime.strptime(
                     str(projeto.data_inicial),
@@ -164,13 +178,19 @@ def editar_projeto(request, pk):
 
 
 def excluir_projeto(request, pk):
+    logger.debug(excluir_projeto.__name__)
     projeto = get_object_or_404(Projeto, pk=pk)
     if projeto.status_projeto_id == 1:
-        projeto.delete()
+        try:
+            logger.info('Excluir projeto: ' + str(projeto.id))
+            projeto.delete()
+        except DatabaseError as error:
+            logger.error(error)
         return redirect('sgteste_app:pesquisar_projeto')
 
 
 def visualizar_projeto(request, pk):
+    logger.debug(visualizar_projeto.__name__)
     projeto = get_object_or_404(Projeto, pk=pk)
     data_final = get_last_date_diario(projeto.id)
     cts_adicionais = get_cts_adicionais(projeto)
@@ -186,5 +206,4 @@ def visualizar_projeto(request, pk):
         'dias_adicionais': dias_adicionais,
         'total_dias': total_dias
     }
-
     return render(request, template, context)

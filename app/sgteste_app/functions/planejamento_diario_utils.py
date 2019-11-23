@@ -1,3 +1,4 @@
+import logging
 from psycopg2._psycopg import DatabaseError
 from app.sgteste_app.functions.gerencia_functions import get_ct_restante
 from app.sgteste_app.models.diario_models import Diario
@@ -5,6 +6,8 @@ import datetime
 from math import ceil
 from django.db.models import Sum
 from app.sgteste_app.models.projeto_models import Projeto
+
+logger = logging.getLogger(__name__)
 
 
 def iterdates(date1, date2):
@@ -38,6 +41,7 @@ def create_planning(initial_date, final_date, cts, project_id, number_of_days):
         if d.weekday() not in (5, 6):
             # print(d, d.weekday(), calcula_planejamento(cts, qtd_dias))
             try:
+                logger.debug('Criando o diario de execucao ' + str(d))
                 Diario.objects.create(
                     data_execucao=d,
                     cts_previstos=calculate_avg(cts, number_of_days),
@@ -45,7 +49,7 @@ def create_planning(initial_date, final_date, cts, project_id, number_of_days):
                 )
 
             except DatabaseError as error:
-                print(error)
+                logger.error(error)
         else:
             contador += 1
         last_date = d + one_day
@@ -56,12 +60,13 @@ def create_planning(initial_date, final_date, cts, project_id, number_of_days):
             contador += 1
         else:
             try:
+                logger.debug('Criando o diario de execucao ' + str(last_date))
                 Diario.objects.create(
                     data_execucao=last_date,
                     cts_previstos=calculate_avg(cts, number_of_days),
                     projeto_id=project_id)
             except DatabaseError as error:
-                print(error)
+                logger.error(error)
             last_date += one_day
         x += 1
     diff = diff_test_case_previstos(project_id)
@@ -109,7 +114,7 @@ def sum_test_case(project_id):
 
         quantidade_cts = test_case['cts_previstos']
     except DatabaseError as error:
-        print(error)
+        logger.error(error)
 
     return quantidade_cts
 
@@ -166,7 +171,7 @@ def fit_planning(project_id, cts, number_of_days):
             upd_new = calculate_avg(cts, number_of_days) - 1
             Diario.objects.filter(pk=id_diario).update(cts_previstos=upd_new)
         except DatabaseError as error:
-            print(error)
+            logger.error(error)
         cont += 1
 
 
@@ -192,7 +197,7 @@ def add_planning(initial_date, final_date, cts, project_id, number_of_days):
             cts_adicionais=cts_adicionais)
 
     except DatabaseError as error:
-        print(error)
+        logger.error(error)
     for d in iterdates(initial_date, final_date):
         if d.weekday() not in (5, 6):
             # print(d, d.weekday(), calcula_planejamento(cts, qtd_dias))
@@ -203,7 +208,7 @@ def add_planning(initial_date, final_date, cts, project_id, number_of_days):
                     projeto_id=project_id)
 
             except DatabaseError as error:
-                print(error)
+                logger.error(error)
         else:
             contador += 1
         last_date = d + one_day
@@ -221,7 +226,7 @@ def add_planning(initial_date, final_date, cts, project_id, number_of_days):
 
                 last_date += one_day
             except DatabaseError as error:
-                print(error)
+                logger.error(error)
         x += 1
     refazer_media_pos_add_planning(project_id)
 
@@ -251,65 +256,60 @@ def update_pos_execute(project_id, diario_id, cts_executados, cts_cancelados):
                 while cont < cts_cancelados:
                     if alt <= dias:
                         alt = 0
-                    diario = Diario.objects.filter(
-                        projeto_id=project_id, cts_executados=0,
-                        cts_previstos__gt=0).order_by('data_execucao')[alt]
+                    try:
+                        diario = Diario.objects.filter(
+                            projeto_id=project_id, cts_executados=0,
+                            cts_previstos__gt=0).order_by('data_execucao')[alt]
 
-                    troca = diario.cts_previstos - 1
-                    Diario.objects.filter(pk=diario.id).update(
-                        cts_previstos=troca)
+                        troca = diario.cts_previstos - 1
+                        Diario.objects.filter(pk=diario.id).update(
+                            cts_previstos=troca)
 
-                    alt += 1
-                    cont += 1
+                        alt += 1
+                        cont += 1
+                    except (IndexError, DatabaseError) as error:
+                        logger.error(error)
 
                 cont = 0
                 while cont < diff_exec_to_previsto:
                     if alt <= dias:
                         alt = 0
-                    diario = Diario.objects.filter(
-                        projeto_id=project_id, cts_executados=0,
-                        cts_previstos__gt=0).order_by('data_execucao')[alt]
+                    try:
+                        diario = Diario.objects.filter(
+                            projeto_id=project_id, cts_executados=0,
+                            cts_previstos__gt=0).order_by('data_execucao')[alt]
 
-                    troca = diario.cts_previstos
-                    Diario.objects.filter(pk=diario.id).update(
-                        cts_previstos=troca + 1)
-                    alt += 1
-                    cont += 1
+                        troca = diario.cts_previstos
+                        Diario.objects.filter(pk=diario.id).update(
+                            cts_previstos=troca + 1)
+                        alt += 1
+                        cont += 1
+                    except (DatabaseError, IndexError) as error:
+                        logger.error(error)
             else:
                 cont = 0
                 while cont < diff_exec_to_previsto:
                     if alt <= dias:
                         alt = 0
-                    diario = Diario.objects.filter(
-                        projeto_id=project_id, cts_executados=0).order_by(
-                        'data_execucao')[alt]
+                    try:
+                        diario = Diario.objects.filter(
+                            projeto_id=project_id, cts_executados=0).order_by(
+                            'data_execucao')[alt]
 
-                    troca = diario.cts_previstos
-                    Diario.objects.filter(pk=diario.id).update(
-                        cts_previstos=troca + 1)
+                        troca = diario.cts_previstos
+                        Diario.objects.filter(pk=diario.id).update(
+                            cts_previstos=troca + 1)
 
-                    alt += 1
-                    cont += 1
+                        alt += 1
+                        cont += 1
+                    except (DatabaseError, IndexError) as error:
+                        logger.error(error)
         else:
             if diff_exec_to_previsto == 0 and cts_cancelados > 0:
                 while cont < cts_cancelados:
                     if alt <= dias:
                         alt = 0
-                    diario = Diario.objects.filter(
-                        projeto_id=project_id, cts_executados=0,
-                        cts_previstos__gt=0).order_by('-data_execucao')[alt]
-
-                    troca = diario.cts_previstos - 1
-                    Diario.objects.filter(pk=diario.id).update(
-                        cts_previstos=troca)
-
-                    alt += 1
-                    cont += 1
-            else:
-                if cts_cancelados > 0:
-                    while cont < cts_cancelados:
-                        if alt <= dias:
-                            alt = 0
+                    try:
                         diario = Diario.objects.filter(
                             projeto_id=project_id, cts_executados=0,
                             cts_previstos__gt=0).order_by('-data_execucao')[alt]
@@ -320,35 +320,61 @@ def update_pos_execute(project_id, diario_id, cts_executados, cts_cancelados):
 
                         alt += 1
                         cont += 1
+                    except (DatabaseError, IndexError) as error:
+                        logger.error(error)
+            else:
+                if cts_cancelados > 0:
+                    while cont < cts_cancelados:
+                        if alt <= dias:
+                            alt = 0
+                        try:
+                            diario = Diario.objects.filter(
+                                projeto_id=project_id, cts_executados=0,
+                                cts_previstos__gt=0).order_by('-data_execucao')[alt]
+
+                            troca = diario.cts_previstos - 1
+                            Diario.objects.filter(pk=diario.id).update(
+                                cts_previstos=troca)
+
+                            alt += 1
+                            cont += 1
+                        except (DatabaseError, IndexError) as error:
+                            logger.error(error)
 
                     cont = 0
                     while cont < diff_exec_to_previsto:
                         if alt <= dias:
                             alt = 0
-                        diario = Diario.objects.filter(
-                            projeto_id=project_id, cts_executados=0,
-                            cts_previstos__gt=0).order_by('-data_execucao')[alt]
+                        try:
+                            diario = Diario.objects.filter(
+                                projeto_id=project_id, cts_executados=0,
+                                cts_previstos__gt=0).order_by('-data_execucao')[alt]
 
-                        troca = diario.cts_previstos
-                        Diario.objects.filter(pk=diario.id).update(
-                            cts_previstos=troca - 1)
+                            troca = diario.cts_previstos
+                            Diario.objects.filter(pk=diario.id).update(
+                                cts_previstos=troca - 1)
 
-                        alt += 1
-                        cont += 1
+                            alt += 1
+                            cont += 1
+                        except (DatabaseError, IndexError):
+                            logger.error(error)
                 else:
                     while cont < diff_exec_to_previsto:
                         if alt <= dias:
                             alt = 0
-                        diario = Diario.objects.filter(
-                            projeto_id=project_id, cts_executados=0,
-                            cts_previstos__gt=0).order_by('-data_execucao')[alt]
+                        try:
+                            diario = Diario.objects.filter(
+                                projeto_id=project_id, cts_executados=0,
+                                cts_previstos__gt=0).order_by('-data_execucao')[alt]
 
-                        troca = diario.cts_previstos
-                        Diario.objects.filter(pk=diario.id).update(
-                            cts_previstos=troca - 1)
+                            troca = diario.cts_previstos
+                            Diario.objects.filter(pk=diario.id).update(
+                                cts_previstos=troca - 1)
 
-                        alt += 1
-                        cont += 1
+                            alt += 1
+                            cont += 1
+                        except (DatabaseError, IndexError) as error:
+                            logger.error(error)
 
     else:
         if get_ct_restante(project_id) > 0:
@@ -386,7 +412,7 @@ def get_cts_previstos_in_diario(diario_id):
         diario = Diario.objects.get(pk=diario_id)
         cts_previstos = diario.cts_previstos
     except DatabaseError as error:
-        print(error)
+        logger.error(error)
     return cts_previstos
 
 
@@ -445,8 +471,8 @@ def refazer_media_pos_add_planning(project_id):
 
                 alt += 1
                 cont += 1
-    except DatabaseError as error:
-        print(error)
+    except IndexError as error:
+        logger.error(error)
 
 
 def get_last_date_diario(project_id):
