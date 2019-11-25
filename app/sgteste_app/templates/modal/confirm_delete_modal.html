@@ -1,5 +1,4 @@
 <!-- Modal -->
-<form method="post" id="modalDeleteForm" role="form">{% csrf_token %}
 <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -14,9 +13,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <a type="submit" class="btn btn-danger" name="confirm-project" href="{% url 'sgteste_app:deletar_projeto' pk=projeto.pk %}">Sim</a>
+                <a type="submit" class="btn btn-danger" name="confirm-project" href="#">Sim</a>
             </div>
         </div>
     </div>
 </div>
-</form>

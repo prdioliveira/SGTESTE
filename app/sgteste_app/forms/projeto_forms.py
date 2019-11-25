@@ -1,7 +1,5 @@
 from django import forms
 from app.sgteste_app.models.projeto_models import Projeto
-from datetime import datetime, timedelta
-from app.sgteste_app.functions.planejamento_diario_utils import create_planning
 from app.sgteste_app.models.diario_models import Diario
 
 

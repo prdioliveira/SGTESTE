@@ -1,6 +1,11 @@
 import threading
 import os
+import logging
+from smtplib import SMTPException
+
 from django.core.mail import EmailMultiAlternatives
+
+logger = logging.getLogger(__name__)
 
 
 class EmailThread(threading.Thread):
@@ -13,9 +18,13 @@ class EmailThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-        msg = EmailMultiAlternatives(self.subject, self.text_content, self.from_email, [self.to])
-        msg.attach_alternative(self.html_content, "text/html")
-        msg.send()
+        try:
+            logger.debug('Envio de email de ' + self.from_email + ' para ' + self.to)
+            msg = EmailMultiAlternatives(self.subject, self.text_content, self.from_email, [self.to])
+            msg.attach_alternative(self.html_content, "text/html")
+            msg.send()
+        except SMTPException as error:
+            logger.error(error)
 
 
 def send_email(subject_email, content_html):
