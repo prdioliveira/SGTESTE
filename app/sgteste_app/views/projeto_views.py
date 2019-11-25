@@ -14,6 +14,7 @@ from app.sgteste_app.functions.planejamento_diario_utils import create_planning
 from app.sgteste_app.functions.planejamento_diario_utils import get_last_date_diario
 from app.sgteste_app.functions.mailer import send_email
 import logging
+from django.contrib import messages
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,11 @@ def cadastrar_projeto(request):
             status_oprojeto = StatusProjeto.objects.get(status='Planejado').id
             projeto.status_projeto_id = status_oprojeto
             projeto.save()
+
+            messages.success(
+                request,
+                'Projeto ' + projeto.nome_projeto + ' cadastrado com sucesso!')
+
             logger.info('Cadastrar projeto ' + projeto.nome_projeto)
 
             # Criando o diario de teste
@@ -143,6 +149,11 @@ def editar_projeto(request, pk):
             projeto = form.save(commit=False)
             if projeto.status_projeto_id == 1:
                 projeto.save()
+
+                messages.warning(
+                    request,
+                    'Projeto ' + projeto.nome_projeto + ' atualizado com sucesso!')
+
                 logger.info('Editar projeto' + projeto.nome_projeto)
                 # Criando o diario de teste
                 data_inicial = datetime.strptime(
@@ -184,6 +195,9 @@ def excluir_projeto(request, pk):
         try:
             logger.info('Excluir projeto: ' + str(projeto.id))
             projeto.delete()
+            messages.error(
+                request,
+                'Projeto ' + projeto.nome_projeto + ' deletado com sucesso!')
         except DatabaseError as error:
             logger.error(error)
         return redirect('sgteste_app:pesquisar_projeto')
