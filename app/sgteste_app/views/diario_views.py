@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 import datetime
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from app.sgteste_app.forms.diario_forms import DiarioForm, AddInDiarioForm
@@ -73,6 +74,12 @@ def executar_teste(request, pk, projeto_id):
                             cts_executados=executados,
                             cts_cancelados=cts_cancelados)
                     else:
+                        messages.error(
+                            request,
+                            'Não é possivel atualizar o diario. Previsto: ' + str(
+                                get_ct_restante(
+                                    projeto_id)) + '. Executado: ' + executados)
+
                         logger.error('Nao foi possivel atualizar o projeto ' + str(projeto_id))
 
                 else:
@@ -84,6 +91,12 @@ def executar_teste(request, pk, projeto_id):
                             cts_executados=executados,
                             cts_cancelados=cts_cancelados)
                     else:
+                        messages.error(
+                            request,
+                            'Não é possivel atualizar o diario. Previsto: ' + str(
+                                get_ct_restante(
+                                    projeto_id)) + '. Executado: ' + executados)
+
                         logger.error(
                             'Nao foi possivel atualizar o projeto ' + str(
                                 projeto_id))
@@ -97,6 +110,12 @@ def executar_teste(request, pk, projeto_id):
                         cts_executados=executados,
                         cts_cancelados=cts_cancelados)
                 else:
+                    messages.error(
+                        request,
+                        'Não é possivel atualizar o diario. Previsto: ' + str(
+                            get_ct_restante(
+                                projeto_id)) + '. Executado: ' + executados)
+
                     logger.error('Nao foi possivel atualizar o projeto ' + str(
                         projeto_id))
 
