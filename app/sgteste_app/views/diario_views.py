@@ -165,7 +165,7 @@ def adicionar_planejamento(request, projeto_id):
             project_id=projeto,
             number_of_days=1
         )
-    return redirect('sgteste_app:lista_execucao', projeto_id)
+        return redirect('sgteste_app:lista_execucao', projeto_id)
 
     form = AddInDiarioForm()
     return render(
