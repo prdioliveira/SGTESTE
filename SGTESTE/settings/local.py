@@ -24,6 +24,12 @@ INSTALLED_APPS += [
     'app.sgteste_app',
 ]
 
+EMAIL_HOST = os.environ.get('EMAIL_HOST')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_USE_SSL = True
+EMAIL_PORT = os.environ.get('EMAIL_PORT')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
