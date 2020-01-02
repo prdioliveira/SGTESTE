@@ -36,7 +36,7 @@ git clone https://github.com/prdioliveira/SGTESTE.git
 Instalando as dependências do projeto
 
 ```
-pip install requirements/requirements/.txt
+pip install -r requirements/requirements/.txt
 
 Serão instalados:
 Django==2.1.3
