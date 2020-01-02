@@ -42,6 +42,10 @@ class PesquisaPage(BasePage):
     def page_cadastrar(self):
         self.get_button_click("btn-cadastrar")
 
+    def btn_view_projeto(self):
+        self.get_button_click("view_project")
+        return ProfilePage(self.driver, self.live_server_url)
+
 
 class CadastroPage(BasePage):
     url = "/cadastro-projeto/"
